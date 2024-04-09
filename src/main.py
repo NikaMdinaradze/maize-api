@@ -6,6 +6,10 @@ from src.settings import DATABASE_MODELS
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "root url"}
+
 register_tortoise(
     app,
     db_url=db_url,
