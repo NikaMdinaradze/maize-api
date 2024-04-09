@@ -1,5 +1,4 @@
 from tortoise.models import Model
-from user import User
-
+from src.models.user import User
 
 __all__: list[Model] = [User, ]
