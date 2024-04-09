@@ -2,8 +2,11 @@ from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
 
 from src.db import db_url
+from src.endpoints import user
 
 app = FastAPI()
+
+app.include_router(user.router)
 
 
 @app.get("/")
