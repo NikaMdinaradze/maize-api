@@ -17,4 +17,4 @@ class User(models.Model):
 
 
 UserCreate = pydantic_model_creator(User, name="UserCreate", exclude=("id",))
-UserView = pydantic_model_creator(User, name="UserBase", exclude=("password",))
+UserView = pydantic_model_creator(User, name="UserView", exclude=("password",))
