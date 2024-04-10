@@ -10,6 +10,9 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 # security config
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRATION = 5  # in minutes
+REFRESH_TOKEN_EXPIRATION = 60 * 24 * 7  # in minutes
+ONE_TIME_TOKEN_EXPIRATION = 3  # in minutes
 
 # email config
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")

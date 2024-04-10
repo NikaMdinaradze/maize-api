@@ -10,3 +10,4 @@ python-jose[cryptography]
 python-multipart==0.0.7
 tortoise-orm[asyncpg]
 aiosmtplib==3.0.1
+python-jose==3.3.0
