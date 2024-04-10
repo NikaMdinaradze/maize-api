@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import UUID4, BaseModel
 from starlette.exceptions import HTTPException
 
-from src.models import User, UserBase, UserCreate
+from src.models import User, UserCreate, UserView
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -13,26 +13,26 @@ class Status(BaseModel):
     message: str
 
 
-@router.get("/", response_model=List[UserBase])
+@router.get("/", response_model=List[UserView])
 async def get_users():
-    return await UserBase.from_queryset(User.all())
+    return await UserView.from_queryset(User.all())
 
 
-@router.post("/", response_model=UserBase)
+@router.post("/", response_model=UserView)
 async def create_user(user: UserCreate):
     user_obj = await User.create(**user.model_dump(exclude_unset=True))
-    return await UserBase.from_tortoise_orm(user_obj)
+    return await UserView.from_tortoise_orm(user_obj)
 
 
-@router.get("/{id}", response_model=UserBase)
+@router.get("/{id}", response_model=UserView)
 async def get_user(user_id: UUID4):
-    return await UserBase.from_queryset_single(User.get(id=user_id))
+    return await UserView.from_queryset_single(User.get(id=user_id))
 
 
-@router.put("/{id}", response_model=UserBase)
+@router.put("/{id}", response_model=UserView)
 async def update_user(user_id: UUID4, user: UserCreate):
     await User.filter(id=user_id).update(**user.model_dump(exclude_unset=True))
-    return await UserBase.from_queryset_single(User.get(id=user_id))
+    return await UserView.from_queryset_single(User.get(id=user_id))
 
 
 @router.delete("/{id}", response_model=Status)
