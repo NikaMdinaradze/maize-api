@@ -6,7 +6,7 @@ from pydantic import EmailStr
 from src.settings import EMAIL_PASSWORD, EMAIL_SENDER
 
 
-async def send_mail(send_to: EmailStr, context: str):
+async def send_mail(send_to: EmailStr, context: str) -> None:
     em = EmailMessage()
     em["From"] = EMAIL_SENDER
     em["To"] = send_to
