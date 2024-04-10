@@ -10,11 +10,12 @@ class User(models.Model):
     email = fields.CharField(max_length=50)
     password = fields.CharField(max_length=128)
     birth_date = fields.DateField()
+    is_active = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
 
     class PydanticMeta:
-        exclude = ("created_at", "modified_at")
+        exclude = ("is_active", "created_at", "modified_at")
 
 
 UserCreate = pydantic_model_creator(User, name="UserCreate", exclude=("id",))
