@@ -9,3 +9,4 @@ passlib==1.7.4
 python-jose[cryptography]
 python-multipart==0.0.7
 tortoise-orm[asyncpg]
+aiosmtpd==1.4.5

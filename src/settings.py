@@ -11,5 +11,6 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-
-DATABASE_MODELS = []
+# email config
+EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
