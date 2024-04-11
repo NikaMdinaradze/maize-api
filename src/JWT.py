@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from jose import jwt
+from pydantic import UUID4
 
 from src.settings import (
     ACCESS_TOKEN_EXPIRATION,
@@ -12,8 +13,8 @@ from src.settings import (
 
 
 class JWTToken:
-    def __init__(self, user_id: str) -> None:
-        self.user_id = user_id
+    def __init__(self, user_id: UUID4) -> None:
+        self.user_id = str(user_id)
 
     def _create_jwt_token(self, expires_delta: timedelta, token_type: str):
         expire = datetime.now(timezone.utc) + expires_delta

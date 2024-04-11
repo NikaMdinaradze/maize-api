@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 # database config
 DB_HOST = os.getenv("DB_HOST")
@@ -10,10 +11,9 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 # security config
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRATION = 5  # in minutes
-REFRESH_TOKEN_EXPIRATION = 60 * 24 * 7  # in minutes
-ONE_TIME_TOKEN_EXPIRATION = 3  # in minutes
-
+ACCESS_TOKEN_EXPIRATION = timedelta(minutes=5)
+REFRESH_TOKEN_EXPIRATION = timedelta(days=7)
+ONE_TIME_TOKEN_EXPIRATION = timedelta(minutes=3)
 # email config
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
