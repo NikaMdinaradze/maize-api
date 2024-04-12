@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
 
-from src.db import db_url
 from src.endpoints import auth, user
+from src.settings import DB_URL
 
 app = FastAPI()
 
@@ -17,7 +17,7 @@ def root():
 
 register_tortoise(
     app,
-    db_url=db_url,
+    db_url=DB_URL,
     modules={"models": ["src.models"]},
     generate_schemas=True,
     add_exception_handlers=True,
