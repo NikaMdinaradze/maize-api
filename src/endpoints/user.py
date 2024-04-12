@@ -19,12 +19,6 @@ async def get_users():
     return await UserView.from_queryset(User.all())
 
 
-@router.post("/", response_model=UserView)
-async def create_user(user: UserCreate):
-    user_obj = await User.create(**user.model_dump(exclude_unset=True))
-    return await UserView.from_tortoise_orm(user_obj)
-
-
 @router.get("/me", response_model=UserView)
 async def user_me(user: User = Depends(get_current_user)):
     return user

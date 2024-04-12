@@ -3,10 +3,17 @@ from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.JWT import JWTToken
-from src.models.user import User
+from src.models.user import User, UserCreate, UserView
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+@router.post("/register", response_model=UserView)
+async def register(user: UserCreate):
+    """
+    TODO: add send mail verification
+    """
+    user_obj = await User.create(**user.model_dump(exclude_unset=True))
+    return await UserView.from_tortoise_orm(user_obj)
 
 @router.post("/login")
 async def login(request: OAuth2PasswordRequestForm = Depends()):
