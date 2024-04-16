@@ -2,9 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from pydantic import UUID4, BaseModel
-from starlette.exceptions import HTTPException
 
-from src.deps import get_current_user, verify_access_token
+from src.deps import get_current_user
 from src.models import User, UserCreate, UserView
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -30,16 +29,13 @@ async def get_user(user_id: UUID4):
 
 
 @router.put("/me", response_model=UserView)
-async def update_user(user: UserCreate, token: dict = Depends(verify_access_token)):
-    user_id = token.get("user_id")
-    await User.filter(id=user_id).update(**user.model_dump(exclude_unset=True))
-    return await UserView.from_queryset_single(User.get(id=user_id))
+async def update_user(user_data: UserCreate, user: User = Depends(get_current_user)):
+    await user.update_from_dict(user_data.dict()).save()
+    updated_user = await UserView.from_queryset_single(User.get(id=user.id))
+    return updated_user
 
 
 @router.delete("/me", response_model=Status)
-async def delete_user(token: dict = Depends(verify_access_token)):
-    user_id = token.get("user_id")
-    deleted_count = await User.filter(id=user_id).delete()
-    if not deleted_count:
-        raise HTTPException(status_code=404, detail=f"User {user_id} not found")
-    return Status(message=f"Deleted user {user_id}")
+async def delete_user(user: User = Depends(get_current_user)):
+    await user.delete()
+    return Status(message=f"Deleted user {user.id}")
