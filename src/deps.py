@@ -43,6 +43,26 @@ def verify_refresh_token(
     return token_data
 
 
+def verify_one_time_token(token: str) -> TokenPayload:
+    """
+    TODO: should be in header when front is added
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        token_data = TokenPayload(**payload)
+    except (jwt.JWTError, ValidationError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
+    if token_data.token_type != "one-time":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials. Expected one time token.",
+        )
+    return token_data
+
+
 async def get_current_user(
     token_data: TokenPayload = Depends(verify_access_token),
 ) -> User:

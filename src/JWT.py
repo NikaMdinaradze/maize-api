@@ -39,6 +39,6 @@ class JWTToken:
     @property
     def one_time_token(self):
         token = self._create_jwt_token(
-            expires_delta=ONE_TIME_TOKEN_EXPIRATION, token_type="one_time"
+            expires_delta=ONE_TIME_TOKEN_EXPIRATION, token_type="one-time"
         )
         return token
