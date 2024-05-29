@@ -16,12 +16,30 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 async def get_db() -> AsyncSession:
+    """
+    Get a database session.
+
+    Yields:
+        AsyncSession: An asynchronous SQLAlchemy session.
+    """
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
 
 
 def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenPayload:
+    """
+    Verify and decode a JWT token.
+
+    Args:
+        token (str): JWT token obtained from the login (OAuth2 scheme).
+
+    Returns:
+        TokenPayload: The payload data of the token.
+
+    Raises:
+        HTTPException: If the token is invalid, cannot be decoded or expired.
+    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         token_data = TokenPayload(**payload)
@@ -34,6 +52,18 @@ def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenPayload:
 
 
 def verify_access_token(token_data: TokenPayload = Depends(verify_token)) -> TokenPayload:
+    """
+    Verify that the token is an access token.
+
+    Args:
+        token_data (TokenPayload): The payload data of the token.
+
+    Returns:
+        TokenPayload: The payload data if it is an access token.
+
+    Raises:
+        HTTPException: If the token is not an access token.
+    """
     if token_data.token_type != "access":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -45,6 +75,18 @@ def verify_access_token(token_data: TokenPayload = Depends(verify_token)) -> Tok
 def verify_refresh_token(
     token_data: TokenPayload = Depends(verify_token),
 ) -> TokenPayload:
+    """
+    Verify that the token is a refresh token.
+
+    Args:
+        token_data (TokenPayload): The payload data of the token.
+
+    Returns:
+        TokenPayload: The payload data if it is a refresh token.
+
+    Raises:
+        HTTPException: If the token is not a refresh token.
+    """
     if token_data.token_type != "refresh":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -55,7 +97,19 @@ def verify_refresh_token(
 
 def verify_one_time_token(token: str) -> TokenPayload:
     """
-    TODO: should be in header when front is added
+    TODO:
+        token should be in header when front is added
+
+    Verify that the token is a one-time token.
+
+    Args:
+        token (str): The JWT token.
+
+    Returns:
+        TokenPayload: The payload data of the token if it is a one-time token.
+
+    Raises:
+        HTTPException: If the token is invalid or not a one-time token.
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -77,6 +131,19 @@ async def get_current_user(
     token_data: TokenPayload = Depends(verify_access_token),
     session: AsyncSession = Depends(get_db),
 ) -> User:
+    """
+    Get the current user from the database.
+
+    Args:
+        token_data (TokenPayload): The payload data of the token.
+        session (AsyncSession): The database session.
+
+    Returns:
+        User: The current user.
+
+    Raises:
+        HTTPException: If the user is not found.
+    """
     statement = select(User).where(User.id == token_data.user_id)
     result = await session.exec(statement)
     user = result.first()
@@ -89,6 +156,18 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
+    """
+    Get the current active user.
+
+    Args:
+        current_user (User): The current user.
+
+    Returns:
+        User: The current active (verified) user.
+
+    Raises:
+        HTTPException: If the user is inactive.
+    """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
