@@ -9,20 +9,17 @@ from src.deps import get_db, verify_one_time_token, verify_refresh_token
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
 from src.models.user import User, UserCreate, UserView
-from src.utils import send_mail
+from src.tasks import send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserView)
 async def register(
-    request: Request,
     user: UserCreate,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
-    """TODO: write background task in different file"""
-
     db_user = User.model_validate(user)
     session.add(db_user)
 
@@ -33,11 +30,8 @@ async def register(
         raise HTTPException(status_code=400, detail="email already exists")
 
     await session.refresh(db_user)
-
-    base_url = str(request.base_url)
-    verification_endpoint = base_url.rstrip("/") + "/auth/verify-email?token="
-    verification_url = verification_endpoint + JWTToken(db_user.id).one_time_token
-    background_tasks.add_task(send_mail, user.email, verification_url)
+    token = JWTToken(db_user.id).one_time_token
+    background_tasks.add_task(send_verification_email, db_user.email, token)
 
     return db_user
 
