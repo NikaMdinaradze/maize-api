@@ -86,4 +86,7 @@ async def verify_email(
     session.add(user)
     await session.commit()
 
-    return {"details": "great success"}
+    return {
+        "details": "your account has been activated return to home page.",
+        "code": 200,
+    }
