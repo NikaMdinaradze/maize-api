@@ -1,12 +1,10 @@
 from fastapi import FastAPI
-from tortoise.contrib.fastapi import register_tortoise
 
-from src.endpoints import auth, user
-from src.settings import TORTOISE_CONFIG
+from src.endpoints import auth
+from src.settings import init_db
 
 app = FastAPI()
 
-app.include_router(user.router)
 app.include_router(auth.router)
 
 
@@ -15,10 +13,6 @@ def root():
     return {"message": "root url"}
 
 
-register_tortoise(
-    app,
-    db_url=TORTOISE_CONFIG["connections"]["default"],
-    modules={"models": ["src.models"]},
-    generate_schemas=True,
-    add_exception_handlers=True,
-)
+@app.on_event("startup")
+async def on_startup():
+    await init_db()

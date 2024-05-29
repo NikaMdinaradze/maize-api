@@ -4,11 +4,21 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.models import TokenPayload, User
-from src.settings import ALGORITHM, SECRET_KEY
+from src.models.token import TokenPayload
+from src.models.user import User
+from src.settings import ALGORITHM, SECRET_KEY, engine
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+async def get_db() -> AsyncSession:
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        yield session
 
 
 def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenPayload:
@@ -65,8 +75,12 @@ def verify_one_time_token(token: str) -> TokenPayload:
 
 async def get_current_user(
     token_data: TokenPayload = Depends(verify_access_token),
+    session: AsyncSession = Depends(get_db),
 ) -> User:
-    user = await User.filter(id=token_data.user_id).first()
+    statement = select(User).where(User.id == token_data.user_id)
+    result = await session.exec(statement)
+    user = result.first()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

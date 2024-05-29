@@ -1,6 +1,9 @@
 import os
 from datetime import timedelta
 
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlmodel import SQLModel, create_engine
+
 # database config
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT", 5432)
@@ -19,15 +22,12 @@ ONE_TIME_TOKEN_EXPIRATION = timedelta(minutes=3)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
+POSTGRES_URL = (
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:" f"{DB_PORT}/{DB_NAME}"
+)
+engine = AsyncEngine(create_engine(POSTGRES_URL, echo=True))
 
-TORTOISE_CONFIG = {
-    "connections": {
-        "default": f"postgres://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:" f"{DB_PORT}/{DB_NAME}"
-    },
-    "apps": {
-        "models": {
-            "models": ["src.models", "aerich.models"],
-            "default_connection": "default",
-        },
-    },
-}
+
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)

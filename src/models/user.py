@@ -1,22 +1,11 @@
-from tortoise import fields, models
-from tortoise.contrib.pydantic import pydantic_model_creator
+from typing import Optional
+from uuid import UUID, uuid4
+
+from sqlmodel import Field, SQLModel
 
 
-class User(models.Model):
-    id = fields.UUIDField(pk=True)
-    username = fields.CharField(max_length=20, unique=True)
-    first_name = fields.CharField(max_length=50)
-    last_name = fields.CharField(max_length=50)
-    email = fields.CharField(max_length=50, unique=True)
-    password = fields.CharField(max_length=128)
-    birth_date = fields.DateField()
-    is_active = fields.BooleanField(default=False)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    modified_at = fields.DatetimeField(auto_now=True)
-
-    class PydanticMeta:
-        exclude = ("is_active", "created_at", "modified_at")
-
-
-UserCreate = pydantic_model_creator(User, name="UserCreate", exclude=("id",))
-UserView = pydantic_model_creator(User, name="UserView", exclude=("password",))
+class User(SQLModel, table=True):
+    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True, index=True)
+    email: str = Field(max_length=50, unique=True, nullable=False)
+    password: str = Field(max_length=128, nullable=False)
+    is_active: bool = Field(default=False)

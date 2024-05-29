@@ -1,30 +1,46 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.deps import verify_one_time_token, verify_refresh_token
+from src.deps import get_db, verify_one_time_token, verify_refresh_token
 from src.JWT import JWTToken
-from src.models import TokenPayload, User, UserCreate, UserView
+from src.models.token import TokenPayload
+from src.models.user import User
 from src.utils import send_mail
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserView)
-async def register(request: Request, user: UserCreate, background_tasks: BackgroundTasks):
-    user_obj = await User.create(**user.model_dump(exclude_unset=True))
+@router.post("/register", response_model=User)
+async def register(
+    request: Request,
+    user: User,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    """TODO: write background task in different file"""
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
 
     base_url = str(request.base_url)
     verification_endpoint = base_url.rstrip("/") + "/auth/verify-email?token="
-    verification_url = verification_endpoint + JWTToken(user_obj.id).one_time_token
+    verification_url = verification_endpoint + JWTToken(user.id).one_time_token
     background_tasks.add_task(send_mail, user.email, verification_url)
 
-    return await UserView.from_tortoise_orm(user_obj)
+    return user
 
 
 @router.post("/login")
-async def login(request: OAuth2PasswordRequestForm = Depends()):
-    user = await User.filter(username=request.username).first()
+async def login(
+    request: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db),
+):
+    statement = select(User).where(User.email == request.username)
+    result = await session.exec(statement)
+    user = result.first()
 
     if not user:
         raise HTTPException(
@@ -52,8 +68,19 @@ def refresh_access_token(refresh_token: TokenPayload = Depends(verify_refresh_to
 
 
 @router.get("/verify-email")
-async def verify_email(one_time_token: str = Depends(verify_one_time_token)):
-    user = await User.filter(id=one_time_token.user_id).first()
+async def verify_email(
+    one_time_token: TokenPayload = Depends(verify_one_time_token),
+    session: AsyncSession = Depends(get_db),
+):
+    statement = select(User).where(User.id == one_time_token.user_id)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     user.is_active = True
-    await user.save()
+    session.add(user)
+    await session.commit()
+
     return {"details": "great success"}

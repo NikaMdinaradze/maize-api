@@ -8,6 +8,8 @@ bcrypt==4.0.1
 passlib==1.7.4
 python-jose[cryptography]
 python-multipart==0.0.7
-tortoise-orm[asyncpg]
 aiosmtplib==3.0.1
 python-jose==3.3.0
+sqlmodel==0.0.18
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
