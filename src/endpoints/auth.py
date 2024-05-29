@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
@@ -7,7 +7,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db, verify_one_time_token, verify_refresh_token
 from src.JWT import JWTToken
-from src.models.token import TokenPayload
+from src.models.token import (
+    AccessTokenPayload,
+    RefreshAndAccessTokenPayload,
+    TokenPayload,
+)
 from src.models.user import User, UserCreate, UserView
 from src.tasks import send_verification_email
 
@@ -20,6 +24,20 @@ async def register(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Register a new user and send verification url (/verify-email).
+
+    Args:
+        user (UserCreate): The details of the user to be registered.
+        background_tasks (BackgroundTasks): Background tasks for sending verification email.
+        session (AsyncSession): The database session.
+
+    Returns:
+        UserView: The details of the registered user.
+
+    Raises:
+        HTTPException: If the email already exists.
+    """
     db_user = User.model_validate(user)
     session.add(db_user)
 
@@ -36,11 +54,24 @@ async def register(
     return db_user
 
 
-@router.post("/login")
+@router.post("/login", response_model=RefreshAndAccessTokenPayload)
 async def login(
     request: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Authenticate and log in a user.
+
+    Args:
+        request (OAuth2PasswordRequestForm): The login credentials.
+        session (AsyncSession): The database session.
+
+    Returns:
+        RefreshAndAccessTokenPayload: The access and refresh tokens along with the token type.
+
+    Raises:
+        HTTPException: If the user doesn't exist or the credentials are invalid.
+    """
     statement = select(User).where(User.email == request.username)
     result = await session.exec(statement)
     user = result.first()
@@ -63,8 +94,22 @@ async def login(
     }
 
 
-@router.post("/refresh")
-def refresh_access_token(refresh_token: TokenPayload = Depends(verify_refresh_token)):
+@router.post("/refresh", response_model=AccessTokenPayload)
+async def refresh_access_token(
+    refresh_token: TokenPayload = Depends(verify_refresh_token),
+):
+    """
+    Refresh the access token.
+
+    Args:
+        refresh_token (TokenPayload): The refresh token payload.
+
+    Returns:
+        AccessTokenPayload: The new access token.
+
+    Raises:
+        HTTPException: If the refresh token is invalid.
+    """
     token = JWTToken(refresh_token.user_id)
     access_token = token.access_token
     return {"access_token": access_token}
@@ -75,6 +120,19 @@ async def verify_email(
     one_time_token: TokenPayload = Depends(verify_one_time_token),
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Verify the email address of a user.
+
+    Args:
+        one_time_token (TokenPayload): The one-time token payload.
+        session (AsyncSession): The database session.
+
+    Returns:
+        dict: A message indicating the account activation status.
+
+    Raises:
+        HTTPException: If the user is not found.
+    """
     statement = select(User).where(User.id == one_time_token.user_id)
     result = await session.exec(statement)
     user = result.one_or_none()

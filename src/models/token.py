@@ -12,3 +12,30 @@ class TokenPayload(BaseModel):
 
     token_type: str
     user_id: UUID4
+
+
+class AccessTokenPayload(BaseModel):
+    """
+    Model representing the payload of an access token.
+
+    Attributes:
+        access_token (str): The access token string.
+        token_type (str): The type of token. Defaults to "bearer".
+    """
+
+    access_token: str
+    token_type: str = "bearer"
+
+
+class RefreshAndAccessTokenPayload(AccessTokenPayload):
+    """
+    Model representing the payload of both access and refresh tokens.
+
+    Inherits:
+        AccessTokenPayload: Model representing the payload of an access token.
+
+    Attributes:
+        refresh_token (str): The refresh token string.
+    """
+
+    refresh_token: str
