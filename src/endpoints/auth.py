@@ -7,30 +7,32 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.deps import get_db, verify_one_time_token, verify_refresh_token
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
-from src.models.user import User
+from src.models.user import User, UserCreate, UserView
 from src.utils import send_mail
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=User)
+@router.post("/register", response_model=UserView)
 async def register(
     request: Request,
-    user: User,
+    user: UserCreate,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
     """TODO: write background task in different file"""
-    session.add(user)
+
+    db_user = User.model_validate(user)
+    session.add(db_user)
     await session.commit()
-    await session.refresh(user)
+    await session.refresh(db_user)
 
     base_url = str(request.base_url)
     verification_endpoint = base_url.rstrip("/") + "/auth/verify-email?token="
-    verification_url = verification_endpoint + JWTToken(user.id).one_time_token
+    verification_url = verification_endpoint + JWTToken(db_user.id).one_time_token
     background_tasks.add_task(send_mail, user.email, verification_url)
 
-    return user
+    return db_user
 
 
 @router.post("/login")
