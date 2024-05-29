@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -24,7 +25,13 @@ async def register(
 
     db_user = User.model_validate(user)
     session.add(db_user)
-    await session.commit()
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail="email already exists")
+
     await session.refresh(db_user)
 
     base_url = str(request.base_url)
