@@ -1,3 +1,6 @@
+"""
+This module provides configuration settings and utilities for the application.
+"""
 import os
 from datetime import timedelta
 
@@ -18,6 +21,9 @@ engine = AsyncEngine(create_engine(POSTGRES_URL, echo=True))
 
 
 async def init_db():
+    """
+    Initialize the database tables.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
