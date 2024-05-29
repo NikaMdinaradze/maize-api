@@ -7,6 +7,14 @@ from src.settings import BACKEND_URL, EMAIL_PASSWORD, EMAIL_SENDER
 
 
 async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
+    """
+    Send an email with the specified subject and content.
+
+    Args:
+        send_to (EmailStr): The recipient's email address.
+        subject (str): The subject of the email.
+        context (str): The content of the email.
+    """
     em = EmailMessage()
     em["From"] = EMAIL_SENDER
     em["To"] = send_to
@@ -24,6 +32,16 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
 
 
 async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
+    """
+    Send a verification email with a one-time JWT token to activate user.
+
+    Args:
+        mail (EmailStr): The recipient's email address.
+        one_time_jwt (str): The one-time JWT token for email verification.
+
+    Returns:
+        None
+    """
     verification_endpoint = BACKEND_URL + "/auth/verify-email?token="
     verification_url = verification_endpoint + one_time_jwt
     await send_mail(mail, "Verify Email", verification_url)
