@@ -10,7 +10,7 @@ from src.deps import get_db, verify_one_time_token, verify_refresh_token
 from src.JWT import JWTToken
 from src.models.token import (
     AccessTokenPayload,
-    RefreshAndAccessTokenPayload,
+    LoginResponsePayload,
     TokenPayload,
 )
 from src.models.user import User, UserCreate, UserView
@@ -32,23 +32,25 @@ async def register(
     Returns:
         The details of the registered user.
     """
-    db_user = User.model_validate(user)
-    session.add(db_user)
 
-    try:
-        await session.commit()
-    except IntegrityError:
-        await session.rollback()
+    statement = select(User).where(User.email == user.email)
+    result = await session.exec(statement)
+    db_user = result.one_or_none()
+
+    if db_user and db_user.is_active:
         raise HTTPException(status_code=400, detail="email already exists")
-
-    await session.refresh(db_user)
+    if not db_user:
+        db_user = User.model_validate(user)
+        session.add(db_user)
+        await session.commit()
+        await session.refresh(db_user)
     token = JWTToken(db_user.id).one_time_token
     background_tasks.add_task(send_verification_email, db_user.email, token)
 
     return db_user
 
 
-@router.post("/login", response_model=RefreshAndAccessTokenPayload)
+@router.post("/login", response_model=LoginResponsePayload)
 async def login(
     request: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_db),
@@ -73,10 +75,17 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials"
         )
 
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Activate Account"
+        )
+
     token = JWTToken(user.id)
+
     return {
         "access_token": token.access_token,
         "refresh_token": token.refresh_token,
+        "user_id": user.id,
         "token_type": "bearer",
     }
 

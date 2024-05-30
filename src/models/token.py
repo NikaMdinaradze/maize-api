@@ -27,7 +27,7 @@ class AccessTokenPayload(BaseModel):
     token_type: str = "bearer"
 
 
-class RefreshAndAccessTokenPayload(AccessTokenPayload):
+class LoginResponsePayload(AccessTokenPayload):
     """
     Model representing the payload of both access and refresh tokens.
 
@@ -39,3 +39,4 @@ class RefreshAndAccessTokenPayload(AccessTokenPayload):
     """
 
     refresh_token: str
+    user_id: UUID4
