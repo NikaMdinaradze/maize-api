@@ -28,6 +28,8 @@ async def register(
 ):
     """
     Register a new user and send verification url (/verify-email).
+    If user already exists with same email and is not active resends email
+    and if it is active raises error that email already exists.
 
     Returns:
         The details of the registered user.
