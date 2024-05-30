@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import HTMLResponse
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -14,6 +15,7 @@ from src.models.token import (
 )
 from src.models.user import User, UserCreate, UserView
 from src.tasks import send_verification_email
+from src.HTML import success_html
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -116,7 +118,5 @@ async def verify_email(
     session.add(user)
     await session.commit()
 
-    return {
-        "details": "your account has been activated return to home page.",
-        "code": 200,
-    }
+    return HTMLResponse(content=success_html, status_code=200)
+
