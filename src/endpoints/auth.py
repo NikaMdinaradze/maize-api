@@ -27,16 +27,8 @@ async def register(
     """
     Register a new user and send verification url (/verify-email).
 
-    Args:
-        user (UserCreate): The details of the user to be registered.
-        background_tasks (BackgroundTasks): Background tasks for sending verification email.
-        session (AsyncSession): The database session.
-
     Returns:
-        UserView: The details of the registered user.
-
-    Raises:
-        HTTPException: If the email already exists.
+        The details of the registered user.
     """
     db_user = User.model_validate(user)
     session.add(db_user)
@@ -62,15 +54,8 @@ async def login(
     """
     Authenticate and log in a user.
 
-    Args:
-        request (OAuth2PasswordRequestForm): The login credentials.
-        session (AsyncSession): The database session.
-
     Returns:
-        RefreshAndAccessTokenPayload: The access and refresh tokens along with the token type.
-
-    Raises:
-        HTTPException: If the user doesn't exist or the credentials are invalid.
+        The access and refresh tokens along with the token type.
     """
     statement = select(User).where(User.email == request.username)
     result = await session.exec(statement)
@@ -101,14 +86,8 @@ async def refresh_access_token(
     """
     Refresh the access token.
 
-    Args:
-        refresh_token (TokenPayload): The refresh token payload.
-
     Returns:
-        AccessTokenPayload: The new access token.
-
-    Raises:
-        HTTPException: If the refresh token is invalid.
+        The new access token.
     """
     token = JWTToken(refresh_token.user_id)
     access_token = token.access_token
@@ -123,15 +102,8 @@ async def verify_email(
     """
     Verify the email address of a user.
 
-    Args:
-        one_time_token (TokenPayload): The one-time token payload.
-        session (AsyncSession): The database session.
-
     Returns:
-        dict: A message indicating the account activation status.
-
-    Raises:
-        HTTPException: If the user is not found.
+        A message indicating the account activation status.
     """
     statement = select(User).where(User.id == one_time_token.user_id)
     result = await session.exec(statement)
