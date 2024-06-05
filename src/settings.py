@@ -5,7 +5,7 @@ import os
 from datetime import timedelta
 
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlmodel import SQLModel, create_engine
+from sqlmodel import create_engine
 
 # database config
 DB_HOST = os.getenv("DB_HOST")
@@ -18,14 +18,6 @@ POSTGRES_URL = (
     f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:" f"{DB_PORT}/{DB_NAME}"
 )
 engine = AsyncEngine(create_engine(POSTGRES_URL, echo=True))
-
-
-async def init_db():
-    """
-    Initialize the database tables.
-    """
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
 
 
 # security config

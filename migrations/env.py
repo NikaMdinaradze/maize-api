@@ -9,6 +9,7 @@ from sqlmodel import SQLModel
 from alembic import context
 
 from src.settings import POSTGRES_URL
+from src.models.user import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,12 +27,11 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 target_metadata.naming_convention = {
-   "ix": "ix_%(column_0_label)s",
-   "uq": "uq_%(table_name)s_%(column_0_name)s",
-   "ck": "ck_%(table_name)s_%(constraint_name)s",
-   "fk": "fk_%(table_name)s_%(column_0_name)"
-         "s_%(referred_table_name)s",
-   "pk": "pk_%(table_name)s"
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)" "s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
 }
 
 # other values from the config, defined by the needs of env.py,

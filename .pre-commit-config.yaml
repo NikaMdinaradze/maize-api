@@ -5,7 +5,8 @@ exclude: |
   (?x)^(
     .*\/__init__\.py$|
     ^core/.*|
-    .*\/migrations/.*|
+    ^migrations/.*|
+    ^migrations/versions/.*|
     \.gitignore|
     \.env_conf/.*|
     ^staticfiles/.*|
