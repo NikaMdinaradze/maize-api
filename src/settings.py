@@ -4,6 +4,7 @@ This module provides configuration settings and utilities for the application.
 import os
 from datetime import timedelta
 
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import create_engine
 
@@ -27,6 +28,7 @@ ACCESS_TOKEN_EXPIRATION = timedelta(minutes=5)
 REFRESH_TOKEN_EXPIRATION = timedelta(days=7)
 ONE_TIME_TOKEN_EXPIRATION = timedelta(minutes=3)
 BACKEND_URL = os.getenv("BACKEND_URL")
+pwd_cxt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # email config
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse
-from sqlalchemy.exc import IntegrityError
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db, verify_one_time_token, verify_refresh_token
+from src.HTML import success_html
 from src.JWT import JWTToken
 from src.models.token import (
     AccessTokenPayload,
@@ -14,8 +14,8 @@ from src.models.token import (
     TokenPayload,
 )
 from src.models.user import User, UserCreate, UserView
+from src.settings import pwd_cxt
 from src.tasks import send_verification_email
-from src.HTML import success_html
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -42,6 +42,7 @@ async def register(
     if db_user and db_user.is_active:
         raise HTTPException(status_code=400, detail="email already exists")
     if not db_user:
+        user.password = pwd_cxt.hash(user.password)  # hashing password
         db_user = User.model_validate(user)
         session.add(db_user)
         await session.commit()
@@ -71,8 +72,7 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User Doesn't Exist"
         )
-
-    if not user.password == request.password:
+    if not pwd_cxt.verify(request.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials"
         )
@@ -130,4 +130,3 @@ async def verify_email(
     await session.commit()
 
     return HTMLResponse(content=success_html, status_code=200)
-
