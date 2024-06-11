@@ -1,4 +1,5 @@
 .PHONY: migrations
+.PHONY: tests
 
 build:
 	@echo "building API development server docker"
@@ -19,3 +20,7 @@ migrations:
 migrate:
 	@echo "migrating"
 	docker-compose run --rm web alembic upgrade head
+
+test:
+	@echo "running tests..."
+	docker-compose run --rm web sh -c "pytest"
