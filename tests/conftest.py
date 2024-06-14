@@ -3,17 +3,13 @@ from typing import Any, AsyncGenerator
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
-from sqlmodel import SQLModel, create_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db
 from src.main import app as _app
-
-DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-engine = AsyncEngine(
-    create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-)
+from src.settings import engine
 
 AsyncSessionTesting = async_sessionmaker(
     bind=engine, expire_on_commit=False, class_=AsyncSession

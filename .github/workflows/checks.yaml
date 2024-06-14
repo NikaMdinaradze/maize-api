@@ -12,18 +12,5 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Make envfile
-      uses: SpicyPizza/create-envfile@v2.0
-      with:
-        envkey_SECRET_KEY: testingsecretkeysupersecure
-        envkey_ALGORITHM: HS256
-        envkey_DATABASE_HOST: db
-        envkey_DATABASE_PORT: 5432
-        envkey_DATABASE_NAME: postgres
-        envkey_DATABASE_USER: postgres
-        envkey_DATABASE_PASSWORD: postgres
-        envkey_POSTGRES_USER: postgres
-        envkey_POSTGRES_PASSWORD: postgres
-        envkey_POSTGRES_DB: postgres
     - name: Run tests
       run: make test

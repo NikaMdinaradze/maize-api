@@ -23,4 +23,4 @@ migrate:
 
 test:
 	@echo "running tests..."
-	docker-compose run --rm web sh -c "pytest"
+	docker-compose -f docker-compose.test.yml run --rm web sh -c "pytest"
