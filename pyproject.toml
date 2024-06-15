@@ -8,5 +8,4 @@ profile = "black"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-timeout = 300
 addopts = "--cov=src tests/"
