@@ -1,5 +1,7 @@
+import asyncio
 from typing import Any, AsyncGenerator
 
+import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -15,6 +17,11 @@ AsyncSessionTesting = async_sessionmaker(
     bind=engine, expire_on_commit=False, class_=AsyncSession
 )
 
+@pytest.fixture(scope="session")
+def event_loop(request):
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 @pytest_asyncio.fixture(scope="function")
 async def app() -> AsyncGenerator[FastAPI, Any]:
