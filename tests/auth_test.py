@@ -1,10 +1,13 @@
 from unittest.mock import MagicMock, patch
 
 from httpx import AsyncClient
+from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.JWT import JWTToken
+from src.models.token import TokenPayload
 from src.models.user import User
-from src.settings import pwd_cxt
+from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
 
 
 async def test_register(client: AsyncClient) -> None:
@@ -87,6 +90,7 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
     db_user = User(email=payload["username"], password=hashed_password, is_active=True)
     db_session.add(db_user)
     await db_session.commit()
+    await db_session.refresh(db_user)
 
     response = await client.post(
         "/auth/login",
@@ -94,8 +98,16 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
     )
     assert response.status_code == 200
     response_data = response.json()
-    assert "access_token" in response_data
-    assert "refresh_token" in response_data
+
+    access_token_payload = jwt.decode(
+        response_data["access_token"], SECRET_KEY, algorithms=[ALGORITHM]
+    )
+    refresh_token_payload = jwt.decode(
+        response_data["refresh_token"], SECRET_KEY, algorithms=[ALGORITHM]
+    )
+
+    assert access_token_payload["user_id"] == str(db_user.id)
+    assert refresh_token_payload["user_id"] == str(db_user.id)
     assert response_data["user_id"] == str(db_user.id)
     assert response_data["token_type"] == "bearer"
 
@@ -168,3 +180,38 @@ async def test_login_inactive_user(client: AsyncClient, db_session: AsyncSession
     )
     assert response.status_code == 401
     assert response.json() == {"detail": "Activate Account"}
+
+
+async def test_refresh_access_token(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test refreshing the access token using a valid refresh token.
+
+    This test checks if a user can get a new access token using a valid refresh token.
+    """
+    payload = {"username": "existinguser@example.com", "password": "password123"}
+
+    hashed_password = pwd_cxt.hash(payload["password"])
+    db_user = User(email=payload["username"], password=hashed_password, is_active=True)
+    db_session.add(db_user)
+    await db_session.commit()
+    await db_session.refresh(db_user)
+
+    refresh_token = JWTToken(db_user.id).refresh_token
+
+    response = await client.post(
+        "/auth/refresh",
+        headers={"Authorization": f"Bearer {refresh_token}"},
+    )
+
+    assert response.status_code == 200
+    response_data = response.json()
+
+    access_token_payload = jwt.decode(
+        response_data["access_token"], SECRET_KEY, algorithms=[ALGORITHM]
+    )
+    access_token_data = TokenPayload(**access_token_payload)
+
+    assert access_token_data.user_id == db_user.id
+    assert access_token_data.token_type == "access"
