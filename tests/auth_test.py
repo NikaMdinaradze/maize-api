@@ -4,6 +4,7 @@ from httpx import AsyncClient
 from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.HTML import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
 from src.models.user import User
@@ -215,3 +216,26 @@ async def test_refresh_access_token(
 
     assert access_token_data.user_id == db_user.id
     assert access_token_data.token_type == "access"
+
+
+async def test_verify_email_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test the successful verification of a user's email.
+    """
+    payload = {"username": "newuser@example.com", "password": "password123"}
+
+    hashed_password = pwd_cxt.hash(payload["password"])
+    db_user = User(email=payload["username"], password=hashed_password)
+    db_session.add(db_user)
+    await db_session.commit()
+
+    one_time_token = JWTToken(db_user.id).one_time_token
+
+    response = await client.get("/auth/verify-email", params={"token": one_time_token})
+    await db_session.refresh(db_user)
+
+    assert response.status_code == 200
+    assert response.text == success_html
+    assert db_user.is_active
