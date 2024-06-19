@@ -1,7 +1,9 @@
+import re
 from enum import Enum
+from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlmodel import AutoString, Field, SQLModel
 
 
@@ -42,7 +44,19 @@ class UserCreate(UserBase):
         password (str): The password for the new user.
     """
 
-    password: str = Field(max_length=128)
+    password: Optional[str] = Field(None, max_length=24)
+
+    @field_validator("password")
+    def validate_password(cls, password):
+        if not password:
+            raise ValueError("Password is required field.")
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+        if not re.search(r"[A-Z]", password):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not re.search(r"\d", password):
+            raise ValueError("Password must contain at least one digit.")
+        return password
 
 
 class UserView(UserBase):
