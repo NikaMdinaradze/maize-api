@@ -199,7 +199,7 @@ async def test_refresh_access_token(
     await db_session.commit()
     await db_session.refresh(db_user)
 
-    refresh_token = JWTToken(db_user.id).refresh_token
+    refresh_token = JWTToken(db_user.id).get_refresh_token()
 
     response = await client.post(
         "/auth/refresh",
@@ -231,7 +231,7 @@ async def test_verify_email_success(
     db_session.add(db_user)
     await db_session.commit()
 
-    one_time_token = JWTToken(db_user.id).one_time_token
+    one_time_token = JWTToken(db_user.id).get_one_time_token()
 
     response = await client.get("/auth/verify-email", params={"token": one_time_token})
     await db_session.refresh(db_user)

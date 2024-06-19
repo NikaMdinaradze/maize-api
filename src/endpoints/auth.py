@@ -47,7 +47,7 @@ async def register(
         session.add(db_user)
         await session.commit()
         await session.refresh(db_user)
-    token = JWTToken(db_user.id).one_time_token
+    token = JWTToken(db_user.id).get_one_time_token()
     background_tasks.add_task(send_verification_email, db_user.email, token)
 
     return db_user
@@ -85,8 +85,8 @@ async def login(
     token = JWTToken(user.id)
 
     return {
-        "access_token": token.access_token,
-        "refresh_token": token.refresh_token,
+        "access_token": token.get_access_token(),
+        "refresh_token": token.get_refresh_token(),
         "user_id": user.id,
         "token_type": "bearer",
     }
@@ -103,7 +103,7 @@ async def refresh_access_token(
         The new access token.
     """
     token = JWTToken(refresh_token.user_id)
-    access_token = token.access_token
+    access_token = token.get_access_token()
     return {"access_token": access_token}
 
 

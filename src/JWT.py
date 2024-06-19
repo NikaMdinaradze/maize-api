@@ -50,41 +50,32 @@ class JWTToken:
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
-    @property
-    def access_token(self):
+    def get_access_token(self, expires_delta=ACCESS_TOKEN_EXPIRATION):
         """
         Generate an access token.
 
         Returns:
             str: The generated access token.
         """
-        token = self._create_jwt_token(
-            expires_delta=ACCESS_TOKEN_EXPIRATION, token_type="access"
-        )
+        token = self._create_jwt_token(expires_delta=expires_delta, token_type="access")
         return token
 
-    @property
-    def refresh_token(self):
+    def get_refresh_token(self, expires_delta=REFRESH_TOKEN_EXPIRATION):
         """
         Generate a refresh token.
 
         Returns:
             str: The generated refresh token.
         """
-        token = self._create_jwt_token(
-            expires_delta=REFRESH_TOKEN_EXPIRATION, token_type="refresh"
-        )
+        token = self._create_jwt_token(expires_delta=expires_delta, token_type="refresh")
         return token
 
-    @property
-    def one_time_token(self):
+    def get_one_time_token(self, expires_delta=ONE_TIME_TOKEN_EXPIRATION):
         """
         Generate a one-time token.
 
         Returns:
             str: The generated one-time token.
         """
-        token = self._create_jwt_token(
-            expires_delta=ONE_TIME_TOKEN_EXPIRATION, token_type="one-time"
-        )
+        token = self._create_jwt_token(expires_delta=expires_delta, token_type="one-time")
         return token
