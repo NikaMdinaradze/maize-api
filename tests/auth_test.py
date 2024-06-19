@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from httpx import AsyncClient
@@ -218,6 +219,33 @@ async def test_refresh_access_token(
     assert access_token_data.token_type == "access"
 
 
+async def test_refresh_access_expired_token(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test refreshing the access token using an invalid expired refresh token.
+    """
+    payload = {"username": "existinguser@example.com", "password": "password123"}
+
+    hashed_password = pwd_cxt.hash(payload["password"])
+    db_user = User(email=payload["username"], password=hashed_password, is_active=True)
+    db_session.add(db_user)
+    await db_session.commit()
+    await db_session.refresh(db_user)
+
+    refresh_token = JWTToken(db_user.id).get_refresh_token(
+        expires_delta=timedelta(seconds=-1)
+    )
+
+    response = await client.post(
+        "/auth/refresh",
+        headers={"Authorization": f"Bearer {refresh_token}"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Could not validate credentials"}
+
+
 async def test_verify_email_success(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
@@ -239,3 +267,27 @@ async def test_verify_email_success(
     assert response.status_code == 200
     assert response.text == success_html
     assert db_user.is_active
+
+
+async def test_verify_expired_email_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test the expired verification of a user's email.
+    """
+    payload = {"username": "newuser@example.com", "password": "password123"}
+
+    hashed_password = pwd_cxt.hash(payload["password"])
+    db_user = User(email=payload["username"], password=hashed_password)
+    db_session.add(db_user)
+    await db_session.commit()
+
+    one_time_token = JWTToken(db_user.id).get_one_time_token(
+        expires_delta=timedelta(seconds=-1)
+    )
+
+    response = await client.get("/auth/verify-email", params={"token": one_time_token})
+    await db_session.refresh(db_user)
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Could not validate credentials"}
