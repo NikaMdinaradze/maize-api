@@ -48,10 +48,9 @@ async def test_register_existing_active_user(
     db_session.add(db_user)
     await db_session.commit()
 
-    with patch("src.tasks.send_mail", new_callable=AsyncMock):
-        response = await client.post("/auth/register", json=payload)
-        assert response.status_code == 400
-        assert response.json() == {"detail": "email already exists"}
+    response = await client.post("/auth/register", json=payload)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "email already exists"}
 
 
 async def test_register_existing_inactive_user(
