@@ -1,5 +1,5 @@
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient
 from jose import jwt
@@ -22,7 +22,7 @@ async def test_register(client: AsyncClient) -> None:
     """
     payload = {"email": "user@example.com", "password": "string"}
 
-    with patch("fastapi.BackgroundTasks.add_task", new_callable=MagicMock):
+    with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.post("/auth/register", json=payload)
         response_data = response.json()
         assert response.status_code == 200
@@ -48,7 +48,7 @@ async def test_register_existing_active_user(
     db_session.add(db_user)
     await db_session.commit()
 
-    with patch("fastapi.BackgroundTasks.add_task", new_callable=MagicMock):
+    with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.post("/auth/register", json=payload)
         assert response.status_code == 400
         assert response.json() == {"detail": "email already exists"}
@@ -70,7 +70,7 @@ async def test_register_existing_inactive_user(
     db_session.add(db_user)
     await db_session.commit()
 
-    with patch("fastapi.BackgroundTasks.add_task", new_callable=MagicMock):
+    with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.post("/auth/register", json=payload)
         assert response.status_code == 200
         response_data = response.json()
