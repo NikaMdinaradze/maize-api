@@ -32,6 +32,25 @@ async def test_register(client: AsyncClient) -> None:
         assert response_data["is_active"] is False
 
 
+async def test_register_invalid_passwords(client: AsyncClient) -> None:
+    """
+    Test the registration of a new user with invalid password.
+    """
+    invalid_passwords = (
+        "",
+        "abc",
+        "ab1",
+        "12345678",
+        "A1234",
+        "Abc12345678901234fbgfdestyhnmffksjndmnfsdf",
+    )
+    email = "user@example.com"
+    for password in invalid_passwords:
+        payload = {"email": email, "password": password}
+        response = await client.post("/auth/register", json=payload)
+        assert response.status_code == 422
+
+
 async def test_register_existing_active_user(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
