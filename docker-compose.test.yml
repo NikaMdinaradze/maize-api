@@ -18,6 +18,8 @@ services:
       - SECRET_KEY=testsecretkey
       - ALGORITHM=HS256
       - BACKEND_URL=http://127.0.0.1
+    entrypoint: ""
+    command: /home/maize-user/docker-entrypoint-dev.sh
     depends_on:
       - db
 
