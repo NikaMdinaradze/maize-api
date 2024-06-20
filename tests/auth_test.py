@@ -20,7 +20,7 @@ async def test_register(client: AsyncClient) -> None:
     It verifies that the response contains the correct user details and
     that the account is initially inactive.
     """
-    payload = {"email": "user@example.com", "password": "string"}
+    payload = {"email": "activeuser@example.com", "password": "String123"}
 
     with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.post("/auth/register", json=payload)
@@ -42,7 +42,7 @@ async def test_register_existing_active_user(
     an active user with the same email already exists. It verifies that an appropriate
     error message is returned.
     """
-    payload = {"email": "activeuser@example.com", "password": "password123"}
+    payload = {"email": "activeuser@example.com", "password": "String123"}
 
     db_user = User(email=payload["email"], password=payload["password"], is_active=True)
     db_session.add(db_user)
@@ -63,7 +63,7 @@ async def test_register_existing_inactive_user(
     a user with the same email exists but is inactive. It verifies that the
     registration succeeds and the user details are correctly returned.
     """
-    payload = {"email": "inactiveuser@example.com", "password": "password123"}
+    payload = {"email": "inactiveuser@example.com", "password": "String123"}
 
     db_user = User(email=payload["email"], password=payload["password"], is_active=False)
     db_session.add(db_user)
@@ -85,7 +85,7 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
     This test checks if a user with valid credentials can log in successfully.
     It verifies that the response contains the correct tokens and user ID.
     """
-    payload = {"username": "existinguser@example.com", "password": "password123"}
+    payload = {"username": "existinguser@example.com", "password": "String123"}
 
     hashed_password = pwd_cxt.hash(payload["password"])
     db_user = User(email=payload["username"], password=hashed_password, is_active=True)
@@ -121,7 +121,7 @@ async def test_login_non_existent_user(client: AsyncClient) -> None:
     the user does not exist. It verifies that an appropriate error message
     is returned.
     """
-    payload = {"username": "nonexistent@example.com", "password": "password123"}
+    payload = {"username": "nonexistent@example.com", "password": "String123"}
 
     response = await client.post(
         "/auth/login",
