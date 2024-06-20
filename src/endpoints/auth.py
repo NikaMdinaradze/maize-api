@@ -42,8 +42,7 @@ async def register(
     if db_user and db_user.is_active:
         raise HTTPException(status_code=400, detail="email already exists")
     if not db_user:
-        user.password = pwd_cxt.hash(user.password)  # hashing password
-        db_user = User.model_validate(user)
+        db_user = User(email=user.email, password=pwd_cxt.hash(user.password))
         session.add(db_user)
         await session.commit()
         await session.refresh(db_user)
