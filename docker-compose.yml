@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     entrypoint: ""
-    command: /home/maize-user/docker-entrypoint-dev.sh
+    command: /root/docker-entrypoint-dev.sh
     depends_on:
       - db
 
