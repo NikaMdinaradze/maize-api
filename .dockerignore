@@ -1,5 +1,5 @@
-# Ignore the Dockerfile itself
-Dockerfile
+# Ignore the Dockerfiles
+dockerfiles
 
 # Ignore Docker Compose files
 docker-compose.yml
@@ -22,7 +22,7 @@ pyproject.toml
 # Ignore README files
 README
 
-# Ignore license file
+# Ignore license files
 LICENSE
 
 # Ignore Makefile

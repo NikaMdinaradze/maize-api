@@ -12,8 +12,8 @@ RUN pip install -r requirements.txt
 
 COPY . /code
 
-ADD scripts/docker-entrypoint-dev.sh /root/docker-entrypoint-dev.sh
-ADD scripts/check_service.py /root/check_service.py
+ADD ./scripts/docker-entrypoint-dev.sh /root/docker-entrypoint-dev.sh
+ADD ./scripts/check_service.py /root/check_service.py
 
 RUN chmod +x /root/docker-entrypoint-dev.sh
 
