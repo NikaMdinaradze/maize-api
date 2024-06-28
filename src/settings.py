@@ -4,6 +4,7 @@ This module provides configuration settings and utilities for the application.
 import os
 from datetime import timedelta
 
+from mako.lookup import TemplateLookup
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import create_engine
@@ -33,3 +34,6 @@ pwd_cxt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # email config
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+
+# html
+lookup = TemplateLookup(directories=["src/templates"])

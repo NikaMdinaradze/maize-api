@@ -5,11 +5,10 @@ from httpx import AsyncClient
 from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.HTML import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
 from src.models.user import User
-from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
+from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt, success_html
 
 
 async def test_register(client: AsyncClient) -> None:

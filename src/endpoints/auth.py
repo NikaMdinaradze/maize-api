@@ -6,7 +6,6 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db, verify_one_time_token, verify_refresh_token
-from src.HTML import success_html
 from src.JWT import JWTToken
 from src.models.token import (
     AccessTokenPayload,
@@ -14,7 +13,7 @@ from src.models.token import (
     TokenPayload,
 )
 from src.models.user import User, UserCreate, UserView
-from src.settings import pwd_cxt
+from src.settings import lookup, pwd_cxt
 from src.tasks import send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -104,6 +103,10 @@ async def refresh_access_token(
     token = JWTToken(refresh_token.user_id)
     access_token = token.get_access_token()
     return {"access_token": access_token}
+
+
+template = lookup.get_template("successful_activation.html")
+success_html = template.render()
 
 
 @router.get("/verify-email")
