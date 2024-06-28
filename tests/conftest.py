@@ -17,16 +17,20 @@ AsyncSessionTesting = async_sessionmaker(
     bind=engine, expire_on_commit=False, class_=AsyncSession
 )
 
+
 @pytest.fixture(scope="session")
 def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
+
 @pytest_asyncio.fixture(scope="function")
 async def app() -> AsyncGenerator[FastAPI, Any]:
     """
     Create a fresh database on each test case.
+
+    TODO: migrations should be used instead of creating all tables
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
