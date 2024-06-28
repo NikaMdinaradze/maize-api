@@ -98,6 +98,8 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
 
     This test checks if a user with valid credentials can log in successfully.
     It verifies that the response contains the correct tokens and user ID.
+
+    Note that username is used instead of email because of OAuth2PasswordRequestForm.
     """
     payload = {"username": "existinguser@example.com", "password": "String123"}
 
@@ -131,6 +133,8 @@ async def test_login_non_existent_user(client: AsyncClient) -> None:
     This test checks if the login process correctly handles the case where
     the user does not exist. It verifies that an appropriate error message
     is returned.
+
+    Note that username is used instead of email because of OAuth2PasswordRequestForm.
     """
     payload = {"username": "nonexistent@example.com", "password": "String123"}
 
@@ -151,6 +155,8 @@ async def test_login_invalid_credentials(
     This test checks if the login process correctly handles the case where
     the user provides incorrect credentials. It verifies that an appropriate
     error message is returned.
+
+    Note that username is used instead of email because of OAuth2PasswordRequestForm.
     """
     payload = {"username": "existinguser@example.com", "password": "wrongpassword"}
 
@@ -171,6 +177,8 @@ async def test_login_inactive_user(client: AsyncClient, db_session: AsyncSession
     This test checks if the login process correctly handles the case where
     the user account is inactive. It verifies that an appropriate error
     message is returned.
+
+    Note that username is used instead of email because of OAuth2PasswordRequestForm.
     """
     payload = {"username": "inactiveuser@example.com", "password": "password123"}
 
