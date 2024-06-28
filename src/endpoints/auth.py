@@ -5,7 +5,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.deps import get_db, verify_one_time_token, verify_refresh_token
+from src.deps import (
+    get_current_active_user,
+    get_db,
+    verify_one_time_token,
+    verify_refresh_token,
+)
 from src.JWT import JWTToken
 from src.models.token import (
     AccessTokenPayload,
@@ -132,3 +137,28 @@ async def verify_email(
     await session.commit()
 
     return HTMLResponse(content=success_html, status_code=200)
+
+
+@router.post("/change-password")
+async def change_password(
+    new_password: str,
+    old_password: str,
+    user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Change the password for the authenticated user.
+
+    Returns:
+        A message indicating the password change status.
+    """
+    if not pwd_cxt.verify(old_password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect old password"
+        )
+
+    user.password = pwd_cxt.hash(new_password)
+    session.add(user)
+    await session.commit()
+
+    return {"message": "Password updated successfully"}
