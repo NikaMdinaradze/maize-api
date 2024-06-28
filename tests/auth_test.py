@@ -8,8 +8,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.endpoints.auth import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
-from src.models.user import User
-from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
+from src.settings import ALGORITHM, SECRET_KEY
+from tests.utils import create_user
 
 
 async def test_register(client: AsyncClient) -> None:
@@ -62,10 +62,7 @@ async def test_register_existing_active_user(
     error message is returned.
     """
     payload = {"email": "activeuser@example.com", "password": "String123"}
-
-    db_user = User(email=payload["email"], password=payload["password"], is_active=True)
-    db_session.add(db_user)
-    await db_session.commit()
+    await create_user(db_session, payload["email"], payload["password"], is_active=True)
 
     response = await client.post("/auth/register", json=payload)
     assert response.status_code == 400
@@ -84,9 +81,7 @@ async def test_register_existing_inactive_user(
     """
     payload = {"email": "inactiveuser@example.com", "password": "String123"}
 
-    db_user = User(email=payload["email"], password=payload["password"], is_active=False)
-    db_session.add(db_user)
-    await db_session.commit()
+    await create_user(db_session, payload["email"], payload["password"])
 
     with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.post("/auth/register", json=payload)
@@ -106,12 +101,9 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
     """
     payload = {"username": "existinguser@example.com", "password": "String123"}
 
-    hashed_password = pwd_cxt.hash(payload["password"])
-    db_user = User(email=payload["username"], password=hashed_password, is_active=True)
-    db_session.add(db_user)
-    await db_session.commit()
-    await db_session.refresh(db_user)
-
+    db_user = await create_user(
+        db_session, payload["username"], payload["password"], is_active=True
+    )
     response = await client.post(
         "/auth/login",
         data={"username": payload["username"], "password": payload["password"]},
@@ -162,11 +154,7 @@ async def test_login_invalid_credentials(
     """
     payload = {"username": "existinguser@example.com", "password": "wrongpassword"}
 
-    db_user = User(
-        email=payload["username"], password=pwd_cxt.hash("password123"), is_active=True
-    )
-    db_session.add(db_user)
-    await db_session.commit()
+    await create_user(db_session, payload["username"], "password123", is_active=True)
 
     response = await client.post(
         "/auth/login",
@@ -186,13 +174,7 @@ async def test_login_inactive_user(client: AsyncClient, db_session: AsyncSession
     """
     payload = {"username": "inactiveuser@example.com", "password": "password123"}
 
-    db_user = User(
-        email=payload["username"],
-        password=pwd_cxt.hash(payload["password"]),
-        is_active=False,
-    )
-    db_session.add(db_user)
-    await db_session.commit()
+    await create_user(db_session, payload["username"], payload["password"])
 
     response = await client.post(
         "/auth/login",
@@ -210,13 +192,11 @@ async def test_refresh_access_token(
 
     This test checks if a user can get a new access token using a valid refresh token.
     """
-    payload = {"username": "existinguser@example.com", "password": "password123"}
+    payload = {"email": "existinguser@example.com", "password": "password123"}
 
-    hashed_password = pwd_cxt.hash(payload["password"])
-    db_user = User(email=payload["username"], password=hashed_password, is_active=True)
-    db_session.add(db_user)
-    await db_session.commit()
-    await db_session.refresh(db_user)
+    db_user = await create_user(
+        db_session, payload["email"], payload["password"], is_active=True
+    )
 
     refresh_token = JWTToken(db_user.id).get_refresh_token()
 
@@ -243,13 +223,11 @@ async def test_refresh_access_expired_token(
     """
     Test refreshing the access token using an invalid expired refresh token.
     """
-    payload = {"username": "existinguser@example.com", "password": "password123"}
+    payload = {"email": "existinguser@example.com", "password": "password123"}
 
-    hashed_password = pwd_cxt.hash(payload["password"])
-    db_user = User(email=payload["username"], password=hashed_password, is_active=True)
-    db_session.add(db_user)
-    await db_session.commit()
-    await db_session.refresh(db_user)
+    db_user = await create_user(
+        db_session, payload["email"], payload["password"], is_active=True
+    )
 
     refresh_token = JWTToken(db_user.id).get_refresh_token(
         expires_delta=timedelta(seconds=-1)
@@ -270,12 +248,11 @@ async def test_verify_email_success(
     """
     Test the successful verification of a user's email.
     """
-    payload = {"username": "newuser@example.com", "password": "password123"}
+    payload = {"email": "newuser@example.com", "password": "password123"}
 
-    hashed_password = pwd_cxt.hash(payload["password"])
-    db_user = User(email=payload["username"], password=hashed_password)
-    db_session.add(db_user)
-    await db_session.commit()
+    db_user = await create_user(
+        db_session, payload["email"], payload["password"], is_active=True
+    )
 
     one_time_token = JWTToken(db_user.id).get_one_time_token()
 
@@ -293,13 +270,11 @@ async def test_verify_expired_email_success(
     """
     Test the expired verification of a user's email.
     """
-    payload = {"username": "newuser@example.com", "password": "password123"}
+    payload = {"email": "newuser@example.com", "password": "password123"}
 
-    hashed_password = pwd_cxt.hash(payload["password"])
-    db_user = User(email=payload["username"], password=hashed_password)
-    db_session.add(db_user)
-    await db_session.commit()
-
+    db_user = await create_user(
+        db_session, payload["email"], payload["password"], is_active=True
+    )
     one_time_token = JWTToken(db_user.id).get_one_time_token(
         expires_delta=timedelta(seconds=-1)
     )
