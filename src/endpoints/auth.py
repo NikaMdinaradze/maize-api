@@ -67,6 +67,8 @@ async def resend_verification_email(
     db_user = result.one_or_none()
     if not db_user:
         raise HTTPException(status_code=404, detail="User with this email does not exist")
+    if db_user.is_active:
+        raise HTTPException(status_code=400, detail="User is already active")
     token = JWTToken(db_user.id).get_one_time_token()
     background_tasks.add_task(send_verification_email, email, token)
     return {"message": "Verification email sent successfully"}
