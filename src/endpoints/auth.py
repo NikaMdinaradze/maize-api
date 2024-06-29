@@ -42,14 +42,13 @@ async def register(
     statement = select(User).where(User.email == user.email)
     result = await session.exec(statement)
     db_user = result.one_or_none()
-
-    if db_user and db_user.is_active:
+    if db_user:
         raise HTTPException(status_code=400, detail="email already exists")
-    if not db_user:
-        db_user = User(email=user.email, password=pwd_cxt.hash(user.password))
-        session.add(db_user)
-        await session.commit()
-        await session.refresh(db_user)
+
+    db_user = User(email=user.email, password=pwd_cxt.hash(user.password))
+    session.add(db_user)
+    await session.commit()
+    await session.refresh(db_user)
     token = JWTToken(db_user.id).get_one_time_token()
     background_tasks.add_task(send_verification_email, db_user.email, token)
 
