@@ -378,7 +378,9 @@ async def test_resend_verification_email_non_existent_user(client: AsyncClient) 
     assert response.json() == {"detail": "User with this email does not exist"}
 
 
-async def test_resend_verification_email_active_user(client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_resend_verification_email_active_user(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
     """
     Test resending a verification email for an active user.
     """
