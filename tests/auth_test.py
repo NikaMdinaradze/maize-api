@@ -305,7 +305,7 @@ async def test_change_password_success(
     )
     access_token = JWTToken(user.id).get_access_token()
 
-    new_password = "newpassword"
+    new_password = "Newpassword123"
     old_password = "Oldpassword123"
 
     response = await client.post(
@@ -320,3 +320,30 @@ async def test_change_password_success(
     # Verify that the password has actually been changed in the database
     await db_session.refresh(user)
     assert pwd_cxt.verify(new_password, user.password)
+
+
+async def test_change_password_invalid_old_password(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test unsuccessful password change for an authenticated user with invalid old password.
+    """
+    old_password = "Oldpassword123"
+    user = await create_user(db_session, "user@example.com", old_password, is_active=True)
+    access_token = JWTToken(user.id).get_access_token()
+
+    new_password = "Newpassword123"
+    invalid_old_password = "OldpasswordInvalid123"
+
+    response = await client.post(
+        "/auth/change-password",
+        json={"new_password": new_password, "old_password": invalid_old_password},
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Incorrect old password"}
+
+    # Verify that the password has not been changed in the database
+    await db_session.refresh(user)
+    assert pwd_cxt.verify(old_password, user.password)
