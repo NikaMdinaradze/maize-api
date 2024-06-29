@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.endpoints.auth import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
-from src.settings import ALGORITHM, SECRET_KEY
+from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
 from tests.utils import create_user
 
 
@@ -292,3 +292,31 @@ async def test_verify_expired_email_success(
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Could not validate credentials"}
+
+
+async def test_change_password_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test successful password change for an authenticated user.
+    """
+    user = await create_user(
+        db_session, "user@example.com", "Oldpassword123", is_active=True
+    )
+    access_token = JWTToken(user.id).get_access_token()
+
+    new_password = "newpassword"
+    old_password = "Oldpassword123"
+
+    response = await client.post(
+        "/auth/change-password",
+        json={"new_password": new_password, "old_password": old_password},
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Password updated successfully"}
+
+    # Verify that the password has actually been changed in the database
+    await db_session.refresh(user)
+    assert pwd_cxt.verify(new_password, user.password)

@@ -17,7 +17,7 @@ from src.models.token import (
     LoginResponsePayload,
     TokenPayload,
 )
-from src.models.user import User, UserCreate, UserView
+from src.models.user import PasswordChange, User, UserCreate, UserView
 from src.settings import lookup, pwd_cxt
 from src.tasks import send_verification_email
 
@@ -141,8 +141,7 @@ async def verify_email(
 
 @router.post("/change-password")
 async def change_password(
-    new_password: str,
-    old_password: str,
+    payload: PasswordChange,
     user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
@@ -152,12 +151,12 @@ async def change_password(
     Returns:
         A message indicating the password change status.
     """
-    if not pwd_cxt.verify(old_password, user.password):
+    if not pwd_cxt.verify(payload.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect old password"
         )
 
-    user.password = pwd_cxt.hash(new_password)
+    user.password = pwd_cxt.hash(payload.new_password)
     session.add(user)
     await session.commit()
 
