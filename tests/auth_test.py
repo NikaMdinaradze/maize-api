@@ -343,3 +343,36 @@ async def test_change_password_invalid_old_password(
     # Verify that the password has not been changed in the database
     await db_session.refresh(user)
     assert pwd_cxt.verify(old_password, user.password)
+
+
+async def test_resend_verification_email_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test successfully resending a verification email.
+    """
+    email = "user@example.com"
+    await create_user(db_session, email, "password123")
+
+    with patch("src.tasks.send_mail", new_callable=AsyncMock):
+        response = await client.get(
+            "/auth/resend-verification-email", params={"email": email}
+        )
+        response_data = response.json()
+
+        assert response.status_code == 200
+        assert response_data == {"message": "Verification email sent successfully"}
+
+
+async def test_resend_verification_email_non_existent_user(client: AsyncClient) -> None:
+    """
+    Test resending a verification email for a non-existent user.
+    """
+    email = "nonexistent@example.com"
+
+    response = await client.get(
+        "/auth/resend-verification-email", params={"email": email}
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User with this email does not exist"}
