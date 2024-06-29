@@ -62,6 +62,10 @@ async def resend_verification_email(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    This endpoint will check if a user with the provided email exists and is not already active.
+    If the user exists and is not active, it will send a verification email with a one-time token.
+    """
     statement = select(User).where(User.email == email)
     result = await session.exec(statement)
     db_user = result.one_or_none()

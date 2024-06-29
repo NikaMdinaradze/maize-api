@@ -352,7 +352,7 @@ async def test_resend_verification_email_success(
     Test successfully resending a verification email.
     """
     email = "user@example.com"
-    await create_user(db_session, email, "password123")
+    await create_user(db_session, email, "Password123")
 
     with patch("src.tasks.send_mail", new_callable=AsyncMock):
         response = await client.get(
@@ -376,3 +376,18 @@ async def test_resend_verification_email_non_existent_user(client: AsyncClient) 
 
     assert response.status_code == 404
     assert response.json() == {"detail": "User with this email does not exist"}
+
+
+async def test_resend_verification_email_active_user(client: AsyncClient, db_session: AsyncSession) -> None:
+    """
+    Test resending a verification email for an active user.
+    """
+    email = "activeuser@example.com"
+    await create_user(db_session, email, "Password123", is_active=True)
+
+    response = await client.get(
+        "/auth/resend-verification-email", params={"email": email}
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "User is already active"}
