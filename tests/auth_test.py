@@ -83,13 +83,9 @@ async def test_register_existing_inactive_user(
 
     await create_user(db_session, payload["email"], payload["password"])
 
-    with patch("src.tasks.send_mail", new_callable=AsyncMock):
-        response = await client.post("/auth/register", json=payload)
-        assert response.status_code == 200
-        response_data = response.json()
-        assert response_data["email"] == payload["email"]
-        assert "id" in response_data
-        assert response_data["is_active"] is False
+    response = await client.post("/auth/register", json=payload)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "email already exists"}
 
 
 async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> None:
