@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -53,6 +54,22 @@ async def register(
     background_tasks.add_task(send_verification_email, db_user.email, token)
 
     return db_user
+
+
+@router.get("/resend-verification-email")
+async def resend_verification_email(
+    email: EmailStr,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    statement = select(User).where(User.email == email)
+    result = await session.exec(statement)
+    db_user = result.one_or_none()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User with this email does not exist")
+    token = JWTToken(db_user.id).get_one_time_token()
+    background_tasks.add_task(send_verification_email, email, token)
+    return {"message": "Verification email sent successfully"}
 
 
 @router.post("/login", response_model=LoginResponsePayload)
