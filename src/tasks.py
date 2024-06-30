@@ -3,7 +3,7 @@ from email.message import EmailMessage
 import aiosmtplib
 from pydantic import EmailStr
 
-from src.settings import BACKEND_URL, EMAIL_PASSWORD, EMAIL_SENDER
+from src.settings import BACKEND_URL, EMAIL_PASSWORD, EMAIL_SENDER, lookup
 
 
 async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
@@ -20,7 +20,7 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
     em["To"] = send_to
     em["Subject"] = subject
 
-    em.add_alternative(context)
+    em.add_alternative(context, subtype="html")
 
     await aiosmtplib.send(
         em,
@@ -29,6 +29,9 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
         username=EMAIL_SENDER,
         password=EMAIL_PASSWORD,
     )
+
+
+template = lookup.get_template("activate_account_email.html")
 
 
 async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
@@ -44,4 +47,5 @@ async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
     """
     verification_endpoint = BACKEND_URL + "/auth/verify-email?token="
     verification_url = verification_endpoint + one_time_jwt
-    await send_mail(mail, "Verify Email", verification_url)
+    email_html = template.render(verification_url=verification_url)
+    await send_mail(mail, "Verify Email", email_html)

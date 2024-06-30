@@ -5,6 +5,10 @@ build:
 	@echo "building API development server docker"
 	docker-compose build
 
+build:
+	@echo "Building development server docker"
+	docker-compose build
+
 run:
 	@echo "starting API development server docker"
 	docker-compose up

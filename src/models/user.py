@@ -47,7 +47,12 @@ class UserCreate(UserBase):
     password: Optional[str] = Field(None, max_length=24)
 
     @field_validator("password")
-    def validate_password(cls, password):
+    @classmethod
+    def validate_password_field(cls, password: str) -> str:
+        return cls.validate_password(password)
+
+    @staticmethod
+    def validate_password(password: str) -> str:
         if not password:
             raise ValueError("Password is required field.")
         if len(password) < 8:
@@ -99,3 +104,13 @@ class UserUpdate(SQLModel):
 
     email: EmailStr | None = None
     password: str | None = None
+
+
+class PasswordChange(SQLModel):
+    old_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, new_password):
+        return UserCreate.validate_password(new_password)
