@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from sqlmodel import select
@@ -19,7 +18,7 @@ from src.models.token import (
     TokenPayload,
 )
 from src.models.user import PasswordChange, User, UserCreate, UserView
-from src.settings import lookup, pwd_cxt
+from src.settings import pwd_cxt
 from src.tasks import send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -131,10 +130,6 @@ async def refresh_access_token(
     return {"access_token": access_token}
 
 
-template = lookup.get_template("successful_activation.html")
-success_html = template.render()
-
-
 @router.get("/verify-email")
 async def verify_email(
     one_time_token: TokenPayload = Depends(verify_one_time_token),
@@ -157,7 +152,7 @@ async def verify_email(
     session.add(user)
     await session.commit()
 
-    return HTMLResponse(content=success_html, status_code=200)
+    return {"message": "User successfully activated"}
 
 
 @router.post("/change-password")

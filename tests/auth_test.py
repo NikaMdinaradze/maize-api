@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.endpoints.auth import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
 from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
@@ -266,7 +265,7 @@ async def test_verify_email_success(
     await db_session.refresh(db_user)
 
     assert response.status_code == 200
-    assert response.text == success_html
+    assert response.json() == {"message": "User successfully activated"}
     assert db_user.is_active
 
 
