@@ -33,8 +33,7 @@ async def register(
 ):
     """
     Register a new user and send verification url (/verify-email).
-    If user already exists with same email and is not active resends email
-    and if it is active raises error that email already exists.
+    If user already exists with same email raises error that it already exists.
 
     Returns:
         The details of the registered user.
@@ -84,7 +83,7 @@ async def login(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Authenticate and log in a user.
+    Authenticate and log in a user use application/x-www-form-urlencoded instead of json.
 
     Returns:
         The access and refresh tokens along with the token type.
@@ -122,7 +121,7 @@ async def refresh_access_token(
     refresh_token: TokenPayload = Depends(verify_refresh_token),
 ):
     """
-    Refresh the access token.
+    Refresh the access token. refresh token should be in header.
 
     Returns:
         The new access token.
@@ -142,7 +141,7 @@ async def verify_email(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Verify the email address of a user.
+    Verify the email address of a user. this url is sent to email.
 
     Returns:
         A message indicating the account activation status.
