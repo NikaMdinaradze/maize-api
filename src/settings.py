@@ -28,7 +28,7 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRATION = timedelta(minutes=5)
 REFRESH_TOKEN_EXPIRATION = timedelta(days=7)
 ONE_TIME_TOKEN_EXPIRATION = timedelta(minutes=3)
-BACKEND_URL = os.getenv("BACKEND_URL")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 pwd_cxt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # email config
