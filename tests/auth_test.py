@@ -260,7 +260,9 @@ async def test_verify_email_success(
 
     one_time_token = JWTToken(db_user.id).get_one_time_token()
 
-    response = await client.get("/auth/verify-email", params={"token": one_time_token})
+    response = await client.get(
+        "/auth/verify-email", headers={"Authorization": f"Bearer {one_time_token}"}
+    )
     await db_session.refresh(db_user)
 
     assert response.status_code == 200
@@ -268,7 +270,7 @@ async def test_verify_email_success(
     assert db_user.is_active
 
 
-async def test_verify_expired_email_success(
+async def test_verify_with_expired_token_email(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
     """
@@ -283,7 +285,9 @@ async def test_verify_expired_email_success(
         expires_delta=timedelta(seconds=-1)
     )
 
-    response = await client.get("/auth/verify-email", params={"token": one_time_token})
+    response = await client.get(
+        "/auth/verify-email", headers={"Authorization": f"Bearer {one_time_token}"}
+    )
     await db_session.refresh(db_user)
 
     assert response.status_code == 403
