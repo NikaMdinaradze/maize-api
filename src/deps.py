@@ -95,15 +95,15 @@ def verify_refresh_token(
     return token_data
 
 
-def verify_one_time_token(token: str) -> TokenPayload:
+def verify_one_time_token(
+    token_data: TokenPayload = Depends(verify_token),
+) -> TokenPayload:
     """
-    TODO:
-        token should be in header when front is added
 
     Verify that the token is a one-time token.
 
     Args:
-        token (str): The JWT token.
+        token_data (TokenPayload): The payload data of the token.
 
     Returns:
         TokenPayload: The payload data of the token if it is a one-time token.
@@ -111,14 +111,6 @@ def verify_one_time_token(token: str) -> TokenPayload:
     Raises:
         HTTPException: If the token is invalid or not a one-time token.
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        token_data = TokenPayload(**payload)
-    except (jwt.JWTError, ValidationError):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Could not validate credentials",
-        )
     if token_data.token_type != "one-time":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

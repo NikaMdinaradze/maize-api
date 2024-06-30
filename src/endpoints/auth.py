@@ -141,7 +141,7 @@ async def verify_email(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Verify the email address of a user. this url is sent to email.
+    Verify the email address of a user. Use one time token obtained from email message in header.
 
     Returns:
         A message indicating the account activation status.
