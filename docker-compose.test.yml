@@ -18,7 +18,7 @@ services:
       - DB_PASSWORD=postgres_test
       - SECRET_KEY=testsecretkey
       - ALGORITHM=HS256
-      - BACKEND_URL=http://127.0.0.1
+      - FRONTEND_URL=http://127.0.0.1
     entrypoint: ""
     depends_on:
       - db
