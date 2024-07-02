@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from sqlmodel import select
@@ -18,9 +17,16 @@ from src.models.token import (
     LoginResponsePayload,
     TokenPayload,
 )
-from src.models.user import PasswordChange, User, UserCreate, UserView
-from src.settings import lookup, pwd_cxt
-from src.tasks import send_verification_email
+from src.models.user import (
+    PasswordChange,
+    PasswordReset,
+    User,
+    UserCreate,
+    UserView,
+)
+from src.models.utils import MessageResponse
+from src.settings import pwd_cxt
+from src.tasks import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,7 +61,7 @@ async def register(
     return db_user
 
 
-@router.get("/resend-verification-email")
+@router.get("/resend-verification-email", response_model=MessageResponse)
 async def resend_verification_email(
     email: EmailStr,
     background_tasks: BackgroundTasks,
@@ -131,11 +137,7 @@ async def refresh_access_token(
     return {"access_token": access_token}
 
 
-template = lookup.get_template("successful_activation.html")
-success_html = template.render()
-
-
-@router.get("/verify-email")
+@router.get("/verify-email", response_model=MessageResponse)
 async def verify_email(
     one_time_token: TokenPayload = Depends(verify_one_time_token),
     session: AsyncSession = Depends(get_db),
@@ -157,15 +159,15 @@ async def verify_email(
     session.add(user)
     await session.commit()
 
-    return HTMLResponse(content=success_html, status_code=200)
+    return {"message": "User successfully activated"}
 
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=MessageResponse)
 async def change_password(
     payload: PasswordChange,
     user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+):
     """
     Change the password for the authenticated user.
 
@@ -182,3 +184,54 @@ async def change_password(
     await session.commit()
 
     return {"message": "Password updated successfully"}
+
+
+@router.get("/forgot-password", response_model=MessageResponse)
+async def forgot_password(
+    email: EmailStr,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Request a password reset. Generates a reset link with one time token and sends it to the user's email.
+
+    Returns:
+        A message indicating the password reset email status.
+    """
+    statement = select(User).where(User.email == email)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User with this email does not exist")
+
+    token = JWTToken(user.id).get_one_time_token()
+    background_tasks.add_task(send_password_reset_email, user.email, token)
+
+    return {"message": "Password reset email sent successfully"}
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+async def reset_password(
+    password: PasswordReset,
+    token: TokenPayload = Depends(verify_one_time_token),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Reset the password using a valid one-time token.
+
+    Returns:
+        A message indicating the password reset status.
+    """
+    statement = select(User).where(User.id == token.user_id)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password = pwd_cxt.hash(password.new_password)
+    session.add(user)
+    await session.commit()
+
+    return {"message": "Password reset successfully"}

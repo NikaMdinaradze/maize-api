@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -5,7 +6,6 @@ from httpx import AsyncClient
 from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.endpoints.auth import success_html
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
 from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
@@ -266,7 +266,7 @@ async def test_verify_email_success(
     await db_session.refresh(db_user)
 
     assert response.status_code == 200
-    assert response.text == success_html
+    assert response.json() == {"message": "User successfully activated"}
     assert db_user.is_active
 
 
@@ -397,3 +397,88 @@ async def test_resend_verification_email_active_user(
 
     assert response.status_code == 400
     assert response.json() == {"detail": "User is already active"}
+
+
+async def test_forgot_password_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test sending reset password email to a registered user.
+    """
+    email = "user@example.com"
+    await create_user(db_session, email, "Password123", is_active=True)
+
+    with patch("src.tasks.send_mail", new_callable=AsyncMock):
+        response = await client.get("/auth/forgot-password", params={"email": email})
+        assert response.status_code == 200
+        assert response.json() == {"message": "Password reset email sent successfully"}
+
+
+async def test_forgot_password_non_existent_user(client: AsyncClient) -> None:
+    """
+    Test sending reset password email to a non-existent user.
+    """
+    email = "nonexistent@example.com"
+    response = await client.get("/auth/forgot-password", params={"email": email})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User with this email does not exist"}
+
+
+async def test_reset_password_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test resetting password with a valid token.
+    """
+    email = "user@example.com"
+    old_password = "Oldpassword123"
+    user = await create_user(db_session, email, old_password, is_active=True)
+
+    new_password = "Newpassword123"
+    one_time_token = JWTToken(user.id).get_one_time_token()
+
+    response = await client.post(
+        "/auth/reset-password",
+        json={"new_password": new_password},
+        headers={"Authorization": f"Bearer {one_time_token}"},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"message": "Password reset successfully"}
+
+    await db_session.refresh(user)
+    assert pwd_cxt.verify(new_password, user.password)
+
+
+async def test_reset_password_invalid_token(client: AsyncClient) -> None:
+    """
+    Test resetting password with an invalid token.
+    """
+    new_password = "Newpassword123"
+    invalid_token = "InvalidToken"
+
+    response = await client.post(
+        "/auth/reset-password",
+        json={"new_password": new_password},
+        headers={"Authorization": f"Bearer {invalid_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Could not validate credentials"}
+
+
+async def test_reset_password_non_existent_user(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """
+    Test resetting password with a valid token for a non-existent user.
+    """
+    new_password = "Newpassword123"
+    non_existent_user_id = uuid.uuid4()
+    one_time_token = JWTToken(user_id=non_existent_user_id).get_one_time_token()
+
+    response = await client.post(
+        "/auth/reset-password",
+        json={"new_password": new_password},
+        headers={"Authorization": f"Bearer {one_time_token}"},
+    )
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
