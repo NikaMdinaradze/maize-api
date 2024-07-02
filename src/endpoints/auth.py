@@ -230,7 +230,7 @@ async def reset_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.password = pwd_cxt.hash(password)
+    user.password = pwd_cxt.hash(password.new_password)
     session.add(user)
     await session.commit()
 
