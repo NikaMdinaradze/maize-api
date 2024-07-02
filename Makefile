@@ -2,10 +2,6 @@
 .PHONY: tests
 
 build:
-	@echo "building API development server docker"
-	docker-compose build
-
-build:
 	@echo "Building development server docker"
 	docker-compose build
 
