@@ -31,7 +31,7 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
     )
 
 
-template = lookup.get_template("activate_account_email.html")
+send_verification_template = lookup.get_template("activate_account_email.html")
 
 
 async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
@@ -47,5 +47,25 @@ async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
     """
     verification_endpoint = FRONTEND_URL + "/auth/verify-email?token="
     verification_url = verification_endpoint + one_time_jwt
-    email_html = template.render(verification_url=verification_url)
+    email_html = send_verification_template.render(verification_url=verification_url)
+    await send_mail(mail, "Verify Email", email_html)
+
+
+send_password_reset_template = lookup.get_template("activate_account_email.html")
+
+
+async def send_password_reset_email(mail: EmailStr, one_time_jwt: str) -> None:
+    """
+    Send email with a one-time JWT token to reset users password.
+
+    Args:
+        mail (EmailStr): The recipient's email address.
+        one_time_jwt (str): The one-time JWT token for email verification.
+
+    Returns:
+        None
+    """
+    verification_endpoint = FRONTEND_URL + "/auth/reset-password?token="
+    verification_url = verification_endpoint + one_time_jwt
+    email_html = send_password_reset_template.render(verification_url=verification_url)
     await send_mail(mail, "Verify Email", email_html)

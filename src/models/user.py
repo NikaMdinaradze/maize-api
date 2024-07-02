@@ -106,11 +106,18 @@ class UserUpdate(SQLModel):
     password: str | None = None
 
 
-class PasswordChange(SQLModel):
-    old_password: str
+class PasswordResetRequest(SQLModel):
+    email: EmailStr
+
+
+class PasswordReset(SQLModel):
     new_password: str
 
     @field_validator("new_password")
     @classmethod
     def validate_new_password(cls, new_password):
         return UserCreate.validate_password(new_password)
+
+
+class PasswordChange(PasswordReset):
+    old_password: str

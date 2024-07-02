@@ -17,9 +17,16 @@ from src.models.token import (
     LoginResponsePayload,
     TokenPayload,
 )
-from src.models.user import PasswordChange, User, UserCreate, UserView
+from src.models.user import (
+    PasswordChange,
+    PasswordReset,
+    PasswordResetRequest,
+    User,
+    UserCreate,
+    UserView,
+)
 from src.settings import pwd_cxt
-from src.tasks import send_verification_email
+from src.tasks import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -177,3 +184,54 @@ async def change_password(
     await session.commit()
 
     return {"message": "Password updated successfully"}
+
+
+@router.get("/forgot-password")
+async def forgot_password(
+    payload: PasswordResetRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Request a password reset. Generates a reset link with one time token and sends it to the user's email.
+
+    Returns:
+        A message indicating the password reset email status.
+    """
+    statement = select(User).where(User.email == payload.email)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User with this email does not exist")
+
+    token = JWTToken(user.id).get_one_time_token()
+    background_tasks.add_task(send_password_reset_email, user.email, token)
+
+    return {"message": "Password reset email sent successfully"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    password: PasswordReset,
+    token: TokenPayload = Depends(verify_one_time_token),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Reset the password using a valid one-time token.
+
+    Returns:
+        A message indicating the password reset status.
+    """
+    statement = select(User).where(User.id == token.user_id)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password = pwd_cxt.hash(password)
+    session.add(user)
+    await session.commit()
+
+    return {"message": "Password reset successfully"}
