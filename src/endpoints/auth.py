@@ -25,6 +25,7 @@ from src.models.user import (
     UserCreate,
     UserView,
 )
+from src.models.utils import MessageResponse
 from src.settings import pwd_cxt
 from src.tasks import send_password_reset_email, send_verification_email
 
@@ -61,7 +62,7 @@ async def register(
     return db_user
 
 
-@router.get("/resend-verification-email")
+@router.get("/resend-verification-email", response_model=MessageResponse)
 async def resend_verification_email(
     email: EmailStr,
     background_tasks: BackgroundTasks,
@@ -137,7 +138,7 @@ async def refresh_access_token(
     return {"access_token": access_token}
 
 
-@router.get("/verify-email")
+@router.get("/verify-email", response_model=MessageResponse)
 async def verify_email(
     one_time_token: TokenPayload = Depends(verify_one_time_token),
     session: AsyncSession = Depends(get_db),
@@ -162,12 +163,12 @@ async def verify_email(
     return {"message": "User successfully activated"}
 
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=MessageResponse)
 async def change_password(
     payload: PasswordChange,
     user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db),
-) -> dict:
+):
     """
     Change the password for the authenticated user.
 
@@ -186,7 +187,7 @@ async def change_password(
     return {"message": "Password updated successfully"}
 
 
-@router.get("/forgot-password")
+@router.get("/forgot-password", response_model=MessageResponse)
 async def forgot_password(
     payload: PasswordResetRequest,
     background_tasks: BackgroundTasks,
@@ -211,7 +212,7 @@ async def forgot_password(
     return {"message": "Password reset email sent successfully"}
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", response_model=MessageResponse)
 async def reset_password(
     password: PasswordReset,
     token: TokenPayload = Depends(verify_one_time_token),
