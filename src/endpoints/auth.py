@@ -20,7 +20,6 @@ from src.models.token import (
 from src.models.user import (
     PasswordChange,
     PasswordReset,
-    PasswordResetRequest,
     User,
     UserCreate,
     UserView,
@@ -189,7 +188,7 @@ async def change_password(
 
 @router.get("/forgot-password", response_model=MessageResponse)
 async def forgot_password(
-    payload: PasswordResetRequest,
+    email: EmailStr,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
@@ -199,7 +198,7 @@ async def forgot_password(
     Returns:
         A message indicating the password reset email status.
     """
-    statement = select(User).where(User.email == payload.email)
+    statement = select(User).where(User.email == email)
     result = await session.exec(statement)
     user = result.one_or_none()
 
