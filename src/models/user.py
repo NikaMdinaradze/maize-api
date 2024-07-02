@@ -106,10 +106,6 @@ class UserUpdate(SQLModel):
     password: str | None = None
 
 
-class PasswordResetRequest(SQLModel):
-    email: EmailStr
-
-
 class PasswordReset(SQLModel):
     new_password: str
 
