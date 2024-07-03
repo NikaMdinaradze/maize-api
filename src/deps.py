@@ -4,13 +4,12 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.orm import sessionmaker
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.models.token import TokenPayload
 from src.models.user import User
-from src.settings import ALGORITHM, SECRET_KEY, engine
+from src.settings import ALGORITHM, SECRET_KEY, async_session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -22,7 +21,6 @@ async def get_db() -> AsyncSession:
     Yields:
         AsyncSession: An asynchronous SQLAlchemy session.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
 
