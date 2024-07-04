@@ -15,5 +15,25 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: List files for debugging
+      run: mkdir env
+
+    - name: Make envfile
+      uses: SpicyPizza/create-envfile@v2.0
+      with:
+        envkey_SECRET_KEY: testingsecretkeysupersecure
+        envkey_ALGORITHM: HS256
+        envkey_DB_HOST: db
+        envkey_DB_PORT: 5432
+        envkey_DB_NAME: postgres
+        envkey_DB_USER: postgres
+        envkey_DB_PASSWORD: postgres
+        envkey_POSTGRES_USER: postgres
+        envkey_POSTGRES_PASSWORD: postgres
+        envkey_POSTGRES_DB: postgres
+        envkey_FRONTEND_URL: http://127.0.0.1
+        file_name: .env.dev
+        directory: env
+
     - name: Run tests
       run: make test

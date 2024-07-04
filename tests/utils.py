@@ -1,7 +1,9 @@
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.models.user import User
-from src.settings import pwd_cxt
+from src.settings import TEST_DB_NAME, engine, pwd_cxt
 
 
 async def create_user(
@@ -13,3 +15,32 @@ async def create_user(
     await db_session.commit()
     await db_session.refresh(db_user)
     return db_user
+
+
+async def create_test_db() -> None:
+    """
+    Create test postgres database.
+    """
+    try:
+        # Ensure we're not in a transaction
+        async with engine.connect() as connection:
+            await connection.execute(text("COMMIT;"))  # Commit any active transaction
+            await connection.execute(text(f"CREATE DATABASE {TEST_DB_NAME};"))
+    except OperationalError as e:
+        print(f"Error occurred: {e}")
+    finally:
+        await engine.dispose()
+
+
+async def delete_test_db():
+    """
+    Delete test postgres database.
+    """
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(text("COMMIT;"))  # Commit any active transaction
+            await connection.execute(text(f"DROP DATABASE {TEST_DB_NAME};"))
+    except OperationalError as e:
+        print(f"Error occurred: {e}")
+    finally:
+        await engine.dispose()
