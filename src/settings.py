@@ -6,9 +6,8 @@ from datetime import timedelta
 
 from mako.lookup import TemplateLookup
 from passlib.context import CryptContext
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # database config
@@ -21,7 +20,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 POSTGRES_URL = (
     f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:" f"{DB_PORT}/{DB_NAME}"
 )
-engine = AsyncEngine(create_engine(POSTGRES_URL, echo=True))
+engine = create_async_engine(POSTGRES_URL, echo=True)
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
