@@ -5,17 +5,29 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db
 from src.main import app as _app
-from src.settings import engine
+from src.settings import TEST_DB_NAME, get_postgres_url
+from tests.utils import create_test_db, delete_test_db
 
-AsyncSessionTesting = async_sessionmaker(
-    bind=engine, expire_on_commit=False, class_=AsyncSession
+TEST_POSTGRES_URL = get_postgres_url(db_name=TEST_DB_NAME)
+
+test_engine = create_async_engine(TEST_POSTGRES_URL, echo=True)
+async_session_testing = async_sessionmaker(
+    bind=test_engine, expire_on_commit=False, class_=AsyncSession
 )
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def setup_and_teardown_test_database():
+    await create_test_db()
+    yield
+    await test_engine.dispose()
+    await delete_test_db()
 
 
 @pytest.fixture(scope="session")
@@ -32,16 +44,16 @@ async def app() -> AsyncGenerator[FastAPI, Any]:
 
     TODO: migrations should be used instead of creating all tables
     """
-    async with engine.begin() as conn:
+    async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
     yield _app
-    async with engine.begin() as conn:
+    async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
 
 
 @pytest_asyncio.fixture(scope="function")
 async def db_session(app: FastAPI) -> AsyncGenerator[AsyncSession, Any]:
-    async with AsyncSessionTesting() as session:
+    async with async_session_testing() as session:
         yield session  # use the session in tests
 
 
