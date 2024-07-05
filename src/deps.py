@@ -9,7 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.models.token import TokenPayload
 from src.models.user import User
-from src.settings import ALGORITHM, SECRET_KEY, async_session
+from src.settings import async_session, settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -39,7 +39,7 @@ def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenPayload:
         HTTPException: If the token is invalid, cannot be decoded or expired.
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         token_data = TokenPayload(**payload)
     except (jwt.JWTError, ValidationError):
         raise HTTPException(

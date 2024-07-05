@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.JWT import JWTToken
 from src.models.token import TokenPayload
-from src.settings import ALGORITHM, SECRET_KEY, pwd_cxt
+from src.settings import pwd_cxt, settings
 from tests.utils import create_user
 
 
@@ -110,10 +110,14 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession) -> N
     response_data = response.json()
 
     access_token_payload = jwt.decode(
-        response_data["access_token"], SECRET_KEY, algorithms=[ALGORITHM]
+        response_data["access_token"],
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
     )
     refresh_token_payload = jwt.decode(
-        response_data["refresh_token"], SECRET_KEY, algorithms=[ALGORITHM]
+        response_data["refresh_token"],
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
     )
 
     assert access_token_payload["user_id"] == str(db_user.id)
@@ -213,7 +217,9 @@ async def test_refresh_access_token(
     response_data = response.json()
 
     access_token_payload = jwt.decode(
-        response_data["access_token"], SECRET_KEY, algorithms=[ALGORITHM]
+        response_data["access_token"],
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
     )
     access_token_data = TokenPayload(**access_token_payload)
 
