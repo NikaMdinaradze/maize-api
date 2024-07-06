@@ -1,11 +1,13 @@
 """
 This module provides configuration settings and utilities for the application.
 """
+import sys
 from datetime import timedelta
+from typing import Union
 
 from mako.lookup import TemplateLookup
 from passlib.context import CryptContext
-from pydantic import PostgresDsn, field_validator
+from pydantic import EmailStr, PostgresDsn
 from pydantic_settings import BaseSettings
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -28,10 +30,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRATION: timedelta = timedelta(minutes=5)
     REFRESH_TOKEN_EXPIRATION: timedelta = timedelta(days=7)
     ONE_TIME_TOKEN_EXPIRATION: timedelta = timedelta(minutes=3)
-    FRONTEND_URL: str | None = "http://127.0.0.1:3000"
+    FRONTEND_URL: str
 
-    EMAIL_SENDER: str | None = None
-    EMAIL_PASSWORD: str | None = None
+    EMAIL_SENDER: EmailStr
+    EMAIL_PASSWORD: str
 
     @property
     def postgres_url(self) -> PostgresDsn:
@@ -44,15 +46,27 @@ class Settings(BaseSettings):
 class TestSettings(Settings):
     """
     Test settings class extending base application settings. Use for pytest.
+    Unnecessary settings variables for testing has default values.
     """
 
-    @field_validator("DB_NAME")
-    def add_test_prefix(cls, name: str) -> str:
-        return "test_" + name
+    FRONTEND_URL: str | None = "http://127.0.0.1:3000"
+
+    EMAIL_SENDER: str | None = None
+    EMAIL_PASSWORD: str | None = None
+
+    @property
+    def test_db_name(self) -> str:
+        return "test_" + self.DB_NAME
 
 
-settings = Settings()
-test_settings = TestSettings()
+def get_settings() -> Union[Settings, TestSettings]:
+    if "pytest" in sys.modules:
+        return TestSettings()
+    return Settings()
+
+
+settings = get_settings()
+
 
 engine = create_async_engine(settings.postgres_url, echo=True)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

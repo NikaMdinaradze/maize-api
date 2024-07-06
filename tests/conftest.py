@@ -11,10 +11,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.deps import get_db
 from src.main import app as _app
-from src.settings import test_settings
+from src.settings import settings
 from tests.utils import create_test_db, delete_test_db
 
-test_engine = create_async_engine(test_settings.postgres_url, echo=True)
+test_engine = create_async_engine(settings.postgres_url, echo=True)
 async_session_testing = async_sessionmaker(
     bind=test_engine, expire_on_commit=False, class_=AsyncSession
 )
@@ -25,10 +25,10 @@ async def setup_and_teardown_test_database():
     """
     Fixture to set up and tear down the test database.
     """
-    await create_test_db(test_settings.DB_NAME)
+    await create_test_db(settings.test_db_name)
     yield
     await test_engine.dispose()
-    await delete_test_db(test_settings.DB_NAME)
+    await delete_test_db(settings.test_db_name)
 
 
 @pytest.fixture(scope="session")
