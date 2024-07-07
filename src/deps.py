@@ -8,8 +8,7 @@ from pydantic import ValidationError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.models.token import TokenPayload
-from src.models.user import User
+from src.models import TokenPayload, User
 from src.settings import async_session, settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

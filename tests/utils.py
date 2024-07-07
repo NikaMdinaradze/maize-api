@@ -2,7 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.models.user import User
+from src.models import User
 from src.settings import engine, pwd_cxt
 
 

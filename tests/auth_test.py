@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.JWT import JWTToken
-from src.models.token import TokenPayload
+from src.models import TokenPayload
 from src.settings import pwd_cxt, settings
 from tests.utils import create_user
 

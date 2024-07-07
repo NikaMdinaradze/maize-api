@@ -1,7 +1,8 @@
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4
+from sqlmodel import SQLModel
 
 
-class TokenPayload(BaseModel):
+class TokenPayload(SQLModel):
     """
     Model representing the payload of a JWT token.
 
@@ -14,7 +15,7 @@ class TokenPayload(BaseModel):
     user_id: UUID4
 
 
-class AccessTokenPayload(BaseModel):
+class AccessTokenPayload(SQLModel):
     """
     Model representing the payload of an access token.
 
