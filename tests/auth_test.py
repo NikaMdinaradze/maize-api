@@ -2,8 +2,8 @@ import uuid
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import jwt
 from httpx import AsyncClient
-from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.JWT import JWTToken
