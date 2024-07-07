@@ -3,13 +3,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt
 from pydantic import UUID4
 
-from src.settings import (
-    ACCESS_TOKEN_EXPIRATION,
-    ALGORITHM,
-    ONE_TIME_TOKEN_EXPIRATION,
-    REFRESH_TOKEN_EXPIRATION,
-    SECRET_KEY,
-)
+from src.settings import settings
 
 
 class JWTToken:
@@ -47,10 +41,12 @@ class JWTToken:
         """
         expire = datetime.now(timezone.utc) + expires_delta
         to_encode = {"user_id": self.user_id, "exp": expire, "token_type": token_type}
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        encoded_jwt = jwt.encode(
+            to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+        )
         return encoded_jwt
 
-    def get_access_token(self, expires_delta=ACCESS_TOKEN_EXPIRATION):
+    def get_access_token(self, expires_delta=settings.ACCESS_TOKEN_EXPIRATION):
         """
         Generate an access token.
 
@@ -60,7 +56,7 @@ class JWTToken:
         token = self._create_jwt_token(expires_delta=expires_delta, token_type="access")
         return token
 
-    def get_refresh_token(self, expires_delta=REFRESH_TOKEN_EXPIRATION):
+    def get_refresh_token(self, expires_delta=settings.REFRESH_TOKEN_EXPIRATION):
         """
         Generate a refresh token.
 
@@ -70,7 +66,7 @@ class JWTToken:
         token = self._create_jwt_token(expires_delta=expires_delta, token_type="refresh")
         return token
 
-    def get_one_time_token(self, expires_delta=ONE_TIME_TOKEN_EXPIRATION):
+    def get_one_time_token(self, expires_delta=settings.ONE_TIME_TOKEN_EXPIRATION):
         """
         Generate a one-time token.
 

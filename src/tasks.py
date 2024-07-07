@@ -3,7 +3,7 @@ from email.message import EmailMessage
 import aiosmtplib
 from pydantic import EmailStr
 
-from src.settings import EMAIL_PASSWORD, EMAIL_SENDER, FRONTEND_URL, lookup
+from src.settings import lookup, settings
 
 
 async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
@@ -16,7 +16,7 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
         context (str): The content of the email.
     """
     em = EmailMessage()
-    em["From"] = EMAIL_SENDER
+    em["From"] = settings.EMAIL_SENDER
     em["To"] = send_to
     em["Subject"] = subject
 
@@ -26,8 +26,8 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
         em,
         hostname="smtp.gmail.com",
         port=587,
-        username=EMAIL_SENDER,
-        password=EMAIL_PASSWORD,
+        username=settings.EMAIL_SENDER,
+        password=settings.EMAIL_PASSWORD,
     )
 
 
@@ -45,7 +45,7 @@ async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
     Returns:
         None
     """
-    verification_endpoint = FRONTEND_URL + "/auth/verify-email?token="
+    verification_endpoint = settings.FRONTEND_URL + "/auth/verify-email?token="
     verification_url = verification_endpoint + one_time_jwt
     email_html = send_verification_template.render(verification_url=verification_url)
     await send_mail(mail, "Verify Email", email_html)
@@ -65,7 +65,7 @@ async def send_password_reset_email(mail: EmailStr, one_time_jwt: str) -> None:
     Returns:
         None
     """
-    verification_endpoint = FRONTEND_URL + "/auth/reset-password?token="
+    verification_endpoint = settings.FRONTEND_URL + "/auth/reset-password?token="
     verification_url = verification_endpoint + one_time_jwt
     email_html = send_password_reset_template.render(verification_url=verification_url)
     await send_mail(mail, "Verify Email", email_html)
