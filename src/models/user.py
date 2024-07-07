@@ -93,19 +93,6 @@ class User(UserCreate, UserView, table=True):
     pass
 
 
-class UserUpdate(SQLModel):
-    """
-    Model for updating (patch) user details.
-
-    Attributes:
-        email (EmailStr | None): The updated email address of the user.
-        password (str | None): The updated password of the user.
-    """
-
-    email: EmailStr | None = None
-    password: str | None = None
-
-
 class PasswordReset(SQLModel):
     new_password: str
 

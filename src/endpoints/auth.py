@@ -12,19 +12,17 @@ from src.deps import (
     verify_refresh_token,
 )
 from src.JWT import JWTToken
-from src.models.token import (
+from src.models import (
     AccessTokenPayload,
     LoginResponsePayload,
-    TokenPayload,
-)
-from src.models.user import (
+    MessageResponse,
     PasswordChange,
     PasswordReset,
+    TokenPayload,
     User,
     UserCreate,
     UserView,
 )
-from src.models.utils import MessageResponse
 from src.settings import pwd_cxt
 from src.tasks import send_password_reset_email, send_verification_email
 
