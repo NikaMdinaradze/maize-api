@@ -8,6 +8,7 @@ from src.models import User
 class Profile(SQLModel, table=True):
     """
     Represents the data required to create a profile.
+    The profile is created after the user successfully verifies their email.
     """
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
