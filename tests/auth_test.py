@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 import jwt
 from httpx import AsyncClient
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.JWT import JWTToken
-from src.models import TokenPayload
+from src.models import Profile, TokenPayload
 from src.settings import pwd_cxt, settings
 from tests.utils import create_user
 
@@ -274,6 +275,14 @@ async def test_verify_email_success(
     assert response.status_code == 200
     assert response.json() == {"message": "User successfully activated"}
     assert db_user.is_active
+
+    profile = await db_session.execute(
+        select(Profile).where(Profile.user_id == db_user.id)
+    )
+    profile = profile.scalar_one_or_none()
+
+    assert profile is not None
+    assert profile.user_id == db_user.id
 
 
 async def test_verify_with_expired_token_email(

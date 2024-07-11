@@ -28,6 +28,6 @@ app.add_middleware(
 )
 
 # Check and create 'media' directory if it doesn't exist
-if not os.path.exists("media"):
-    os.makedirs("media")
-app.mount("/media", StaticFiles(directory="media"), name="media")
+if not os.path.exists("media/profile"):
+    os.makedirs("media/profile")
+app.mount("/media/profile", StaticFiles(directory="media/profile"), name="media-profile")
