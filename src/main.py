@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.endpoints import auth
 
@@ -22,3 +25,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Check and create 'media' directory if it doesn't exist
+if not os.path.exists("media"):
+    os.makedirs("media")
+app.mount("/media", StaticFiles(directory="media"), name="media")
