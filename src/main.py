@@ -2,11 +2,17 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from src.endpoints import auth, profile
 
-app = FastAPI(title="Maize API", description="MVP api for maize", version="0.01")
+app = FastAPI(
+    title="Maize API",
+    description="MVP api for maize",
+    version="0.01",
+    default_response_class=ORJSONResponse,
+)
 
 app.include_router(auth.router)
 app.include_router(profile.router)

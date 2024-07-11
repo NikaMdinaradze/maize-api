@@ -14,3 +14,4 @@ alembic==1.13.1
 PyJWT==2.8.0
 random-username==1.0.2
 python-avatars==1.4.0
+orjson==3.10.6
