@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -21,7 +23,7 @@ async def test_get_profile(client: AsyncClient, db_session: AsyncSession) -> Non
     token = JWTToken(user.id).get_access_token()
 
     response = await client.get(
-        "/profile/me", headers={"Authorization": f"Bearer {token}"}
+        f"/profile/{user.id}", headers={"Authorization": f"Bearer {token}"}
     )
 
     assert response.status_code == 200
@@ -35,6 +37,6 @@ async def test_get_profile_unauthorized(client: AsyncClient) -> None:
     """
     Test retrieving the profile without authentication.
     """
-    response = await client.get("/profile/me")
+    response = await client.get(f"/profile/{uuid4()}")
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
