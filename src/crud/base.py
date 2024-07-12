@@ -1,4 +1,4 @@
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, Sequence, Type, TypeVar
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 T = TypeVar("T", bound=SQLModel)
 
 
-class CRUDManager(Generic[T]):
+class BaseCRUD(Generic[T]):
     def __init__(self, model: Type[T]):
         """
         Initialize the CRUD object with the SQLModel model.
@@ -57,7 +57,7 @@ class CRUDManager(Generic[T]):
 
     async def list(
         self, session: AsyncSession, skip: int = 0, limit: int = 100
-    ) -> List[T]:
+    ) -> Sequence[T]:
         """
         List objects from the database with optional pagination.
         """
