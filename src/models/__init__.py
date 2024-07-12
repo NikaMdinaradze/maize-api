@@ -3,6 +3,7 @@ from typing import Tuple, Type
 from src.models.user import User, UserCreate, UserView, UserBase, PasswordChange, PasswordReset
 from src.models.token import TokenPayload, AccessTokenPayload, LoginResponsePayload
 from src.models.utils import MessageResponse
+from src.models.profile import Profile
 
 from sqlmodel import SQLModel
 

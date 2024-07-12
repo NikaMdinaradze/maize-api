@@ -18,6 +18,7 @@ from src.models import (
     MessageResponse,
     PasswordChange,
     PasswordReset,
+    Profile,
     TokenPayload,
     User,
     UserCreate,
@@ -155,6 +156,10 @@ async def verify_email(
 
     user.is_active = True
     session.add(user)
+
+    profile = Profile(user=user)
+    session.add(profile)
+
     await session.commit()
 
     return {"message": "User successfully activated"}

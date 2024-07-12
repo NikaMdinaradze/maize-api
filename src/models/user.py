@@ -1,10 +1,14 @@
 import re
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr, field_validator
-from sqlmodel import AutoString, Field, SQLModel
+from sqlalchemy.orm import relationship
+from sqlmodel import AutoString, Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from src.models import Profile
 
 
 class RoleEnum(str, Enum):
@@ -90,7 +94,14 @@ class User(UserCreate, UserView, table=True):
         UserView: Model for viewing user details.
     """
 
-    pass
+    profile: Optional["Profile"] = Relationship(
+        sa_relationship=relationship(
+            argument="Profile",
+            cascade="delete",
+            back_populates="user",
+            uselist=False,
+        )
+    )
 
 
 class PasswordReset(SQLModel):
