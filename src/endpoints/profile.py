@@ -12,10 +12,10 @@ router = APIRouter(
 )
 
 
-@router.get("/{pk}", response_model=Profile)
-async def get_profile(pk: UUID, session: AsyncSession = Depends(get_db)) -> Profile:
+@router.get("/{user_pk}", response_model=Profile)
+async def get_profile(user_pk: UUID, session: AsyncSession = Depends(get_db)) -> Profile:
     """
-    Retrieve the profile of the currently authenticated user.
+    Retrieve the profile with the user pk.
     """
-    profile = await profile_manager.get_object(pk, session)
+    profile = await profile_manager.get_object(user_pk, session)
     return profile
