@@ -26,6 +26,7 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
         em,
         hostname="smtp.gmail.com",
         port=587,
+        start_tls=True,
         username=settings.EMAIL_SENDER,
         password=settings.EMAIL_PASSWORD,
     )
