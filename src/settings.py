@@ -1,6 +1,7 @@
 """
 This module provides configuration settings and utilities for the application.
 """
+import logging
 import sys
 from datetime import timedelta
 from typing import Union
@@ -68,10 +69,17 @@ def get_settings() -> Union[Settings, TestSettings]:
 settings = get_settings()
 
 
-engine = create_async_engine(settings.postgres_url, echo=True)
+engine = create_async_engine(settings.postgres_url)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 pwd_cxt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # html
 lookup = TemplateLookup(directories=["src/templates"])
+
+# logger
+logging.basicConfig(
+    filename="app.log",
+    level=logging.WARNING,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
