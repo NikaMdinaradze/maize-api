@@ -1,3 +1,4 @@
+import logging
 from email.message import EmailMessage
 
 import aiosmtplib
@@ -21,15 +22,17 @@ async def send_mail(send_to: EmailStr, subject: str, context: str) -> None:
     em["Subject"] = subject
 
     em.add_alternative(context, subtype="html")
-
-    await aiosmtplib.send(
-        em,
-        hostname="smtp.gmail.com",
-        port=587,
-        start_tls=True,
-        username=settings.EMAIL_SENDER,
-        password=settings.EMAIL_PASSWORD,
-    )
+    try:
+        await aiosmtplib.send(
+            em,
+            hostname="smtp.gmail.com",
+            port=587,
+            start_tls=True,
+            username=settings.EMAIL_SENDER,
+            password=settings.EMAIL_PASSWORD,
+        )
+    except Exception as e:
+        logging.error(e)
 
 
 send_verification_template = lookup.get_template("activate_account_email.html")
@@ -46,7 +49,7 @@ async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
     Returns:
         None
     """
-    verification_endpoint = settings.FRONTEND_URL + "/auth/verify-email?token="
+    verification_endpoint = settings.FRONTEND_URL + "/verify?token="
     verification_url = verification_endpoint + one_time_jwt
     email_html = send_verification_template.render(verification_url=verification_url)
     await send_mail(mail, "Verify Email", email_html)
