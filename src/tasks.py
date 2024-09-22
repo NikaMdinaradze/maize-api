@@ -49,7 +49,7 @@ async def send_verification_email(mail: EmailStr, one_time_jwt: str) -> None:
     Returns:
         None
     """
-    verification_endpoint = settings.FRONTEND_URL + "/auth/verify-email?token="
+    verification_endpoint = settings.FRONTEND_URL + "/verify?token="
     verification_url = verification_endpoint + one_time_jwt
     email_html = send_verification_template.render(verification_url=verification_url)
     await send_mail(mail, "Verify Email", email_html)
